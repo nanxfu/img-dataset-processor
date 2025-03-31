@@ -1,0 +1,7 @@
+.img-preview-card .ant-card-body{
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}

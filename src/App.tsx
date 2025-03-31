@@ -17,6 +17,7 @@ import {
   FolderOpenOutlined 
 } from '@ant-design/icons';
 import type { UploadChangeParam } from 'antd/es/upload';
+import './App.css';
 import type { RcFile } from 'antd/es/upload/interface';
 
 const { Header, Sider, Content } = Layout;
@@ -32,7 +33,6 @@ interface ImageItem {
 function App() {
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
   const [images, setImages] = useState<ImageItem[]>([]);
-
   const handleFileUpload = (info: UploadChangeParam) => {
     if (info.file && info.file.status !== 'uploading') {
       const file = info.file.originFileObj as RcFile;
@@ -49,8 +49,8 @@ function App() {
     <Layout style={{ minHeight: '100vh' }}>
       <Header style={{ background: '#fff', padding: '0 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <PictureOutlined style={{ fontSize: '24px', color: '#eb2f96', marginRight: '12px' }} />
-          <Title level={3} style={{ margin: '0', color: '#eb2f96' }}>LoRA 数据集处理器</Title>
+          <PictureOutlined style={{ fontSize: '24px', marginRight: '12px' }} />
+          <Title level={3} style={{ margin: '0'  }}>LoRA 数据集处理器</Title>
         </div>
       </Header>
       <Layout>
@@ -76,7 +76,12 @@ function App() {
           <Menu
             mode="inline"
             selectedKeys={selectedImage ? [selectedImage.id] : []}
-            style={{ height: 'calc(100vh - 120px)', overflow: 'auto', borderRight: 0 }}
+            style={{ 
+              flex: 1,
+              overflow: 'auto', 
+              borderRight: 0,
+              minHeight: 0 
+            }}
           >
             {images.map(image => (
               <Menu.Item 
@@ -97,56 +102,46 @@ function App() {
         </Sider>
         
         {/* 主内容 - 图片预览 */}
-        <Content style={{ background: '#f5f5f5', padding: '16px', display: 'flex', flexDirection: 'column' }}>
-          <Card 
-            style={{ 
-              flex: 1, 
-              display: 'flex', 
+        <Content style={{ 
+          background: '#f5f5f5', 
+          padding: '16px', 
+          display: 'flex',
+        }}>
+          <Card
+            style={{
+              display: 'flex',
               flexDirection: 'column',
-              overflow: 'hidden' 
+              alignItems: 'center',
+              flex: 1,
             }}
-            bodyStyle={{ 
-              flex: 1, 
-              padding: 0, 
-              display: 'flex', 
-              flexDirection: 'column', 
-              overflow: 'hidden' 
-            }}
+            className='img-preview-card'
           >
             {selectedImage ? (
               <>
-                <div style={{ padding: '12px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
+                <div style={{ padding: '12px', borderBottom: '1px solid #f0f0f0'}}>
                   <Title level={4} style={{ margin: 0 }}>{selectedImage.name}</Title>
                 </div>
                 <div style={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
                   background: '#fafafa',
-                  overflow: 'auto', 
-                  position: 'relative',
-                  minHeight: 0
+                  padding: '24px',
+                  textAlign: 'center',
+                  flex: 1,
+                  overflow: 'auto',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
                 }}>
-                  <div style={{ 
-                    position: 'absolute', 
-                    top: 0, 
-                    left: 0, 
-                    right: 0, 
-                    bottom: 0, 
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '24px'
-                  }}>
-                    <img
+                  <div style={{height: '100%', width: '100%', position: 'relative'}}>
+                  <img
                       src={selectedImage.url}
                       alt={selectedImage.name}
                       style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
+                        width: '100%',
+                        height: '100%',
                         objectFit: 'contain',
-                        display: 'block'
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
                       }}
                     />
                   </div>
