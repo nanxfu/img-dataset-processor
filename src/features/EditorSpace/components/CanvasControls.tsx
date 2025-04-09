@@ -1,4 +1,4 @@
-import { styled } from "styled-components";
+import { styled } from 'styled-components';
 
 const CanvasControlsPanel = styled.div`
   display: flex;
@@ -13,5 +13,3 @@ const CanvasControls: React.FC = () => {
 };
 
 export default CanvasControls;
-
-

@@ -1,7 +1,8 @@
-import { Layout } from "antd";
-import styled from "styled-components";
-import CanvasControls from "./components/CanvasControls";
-import ImagePreview from "./components/ImagePreview";
+import { Layout } from 'antd';
+import styled from 'styled-components';
+
+import CanvasControls from './components/CanvasControls';
+import ImagePreview from './components/ImagePreview';
 const { Content, Header } = Layout;
 
 const EditorToolbar = styled(Header)`

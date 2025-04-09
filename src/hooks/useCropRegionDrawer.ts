@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
-
+import { useState, useCallback } from 'react';
+// TODO - 增加图片缩放功能
 export interface Point {
   x: number;
   y: number;
 }
-
+// Crop Area for the image Ref
 export interface CropRegion {
   top: number;
   right: number;
@@ -25,64 +25,75 @@ export interface UseCropRegionDrawerResult {
   handleMouseUp: () => void;
 }
 
-export const useCropRegionDrawer = ({ 
-  imageRef, 
-  initialRegion = { top: 200, right: 200, bottom: 200, left: 200 } 
+export const useCropRegionDrawer = ({
+  imageRef,
+  initialRegion = { top: 200, right: 200, bottom: 200, left: 200 },
 }: UseCropRegionDrawerProps): UseCropRegionDrawerResult => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState<Point>({ x: 0, y: 0 });
   const [cropRegion, setCropRegion] = useState<CropRegion>(initialRegion);
 
-  const getRelativePosition = useCallback((e: React.MouseEvent<HTMLImageElement>): Point | null => {
-    if (!imageRef.current) return null;
-    
-    const rect = imageRef.current.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-  }, [imageRef]);
+  /* 获取以图片左上角为原点的相对位置 */
+  const getRelativePosition = useCallback(
+    (e: React.MouseEvent<HTMLImageElement>): Point | null => {
+      if (!imageRef.current) return null;
 
-  const calculateCropRegion = useCallback((start: Point, current: Point, imageWidth: number, imageHeight: number): CropRegion => {
-    const width = Math.abs(current.x - start.x);
-    const height = Math.abs(current.y - start.y);
-    const left = Math.min(current.x, start.x);
-    const top = Math.min(current.y, start.y);
+      const rect = imageRef.current.getBoundingClientRect();
+      console.log(rect);
 
-    return {
-      top,
-      right: imageWidth - (left + width),
-      bottom: imageHeight - (top + height),
-      left,
-    };
-  }, []);
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    },
+    [imageRef]
+  );
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
-    const pos = getRelativePosition(e);
-    if (!pos) return;
-    
-    setIsDrawing(true);
-    setStartPos(pos);
-  }, [getRelativePosition]);
+  const calculateCropRegion = useCallback(
+    (start: Point, current: Point, imageWidth: number, imageHeight: number): CropRegion => {
+      const width = Math.abs(current.x - start.x);
+      const height = Math.abs(current.y - start.y);
+      const left = Math.min(current.x, start.x);
+      const top = Math.min(current.y, start.y);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
-    if (!isDrawing || !imageRef.current) return;
+      return {
+        top,
+        right: imageWidth - (left + width),
+        bottom: imageHeight - (top + height),
+        left,
+      };
+    },
+    []
+  );
 
-    const currentPos = getRelativePosition(e);
-    if (!currentPos) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLImageElement>) => {
+      const pos = getRelativePosition(e);
+      if (!pos) return;
 
-    const rect = imageRef.current.getBoundingClientRect();
-    const newRegion = calculateCropRegion(
-      startPos,
-      currentPos,
-      rect.width,
-      rect.height
-    );
+      setIsDrawing(true);
+      setStartPos(pos);
+    },
+    [getRelativePosition]
+  );
 
-    setCropRegion(newRegion);
-  }, [isDrawing, imageRef, startPos, getRelativePosition, calculateCropRegion]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLImageElement>) => {
+      if (!isDrawing || !imageRef.current) return;
+
+      const currentPos = getRelativePosition(e);
+      if (!currentPos) return;
+
+      const rect = imageRef.current.getBoundingClientRect();
+      const newRegion = calculateCropRegion(startPos, currentPos, rect.width, rect.height);
+      setCropRegion(newRegion);
+    },
+    [isDrawing, imageRef, startPos, getRelativePosition, calculateCropRegion]
+  );
 
   const handleMouseUp = useCallback(() => {
+    console.table(['Crop Region', cropRegion, 'Start Position', startPos]);
+    debugger;
     setIsDrawing(false);
   }, []);
 
@@ -93,4 +104,4 @@ export const useCropRegionDrawer = ({
     handleMouseMove,
     handleMouseUp,
   };
-}; 
+};

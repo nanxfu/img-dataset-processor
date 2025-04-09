@@ -1,9 +1,11 @@
-import styled from "styled-components";
-import { Button, Layout, Upload } from "antd";
-import SettingPanel from "./components/SettingPanel";
-import { FolderOpenOutlined } from "@ant-design/icons";
-import { RcFile, UploadChangeParam } from "antd/es/upload";
-import { useImageStore } from "../../store/useImageStore";
+import { FolderOpenOutlined } from '@ant-design/icons';
+import { Button, Layout, Upload } from 'antd';
+import { RcFile, UploadChangeParam } from 'antd/es/upload';
+import styled from 'styled-components';
+
+import { useImageStore } from '../../store/useImageStore';
+
+import SettingPanel from './components/SettingPanel';
 const { Sider } = Layout;
 const AppTitle = styled.div`
   padding: 16px;
@@ -21,10 +23,10 @@ const UploadImageArea = styled.div`
 `;
 
 const ToolSidebar: React.FC = () => {
-  const addImage = useImageStore((state) => state.addImage);
-  
+  const addImage = useImageStore(state => state.addImage);
+
   const handleFileUpload = (info: UploadChangeParam) => {
-    if (info.file && info.file.status !== "uploading") {
+    if (info.file && info.file.status !== 'uploading') {
       const file = info.file.originFileObj as RcFile;
       const newImage = {
         id: Math.random().toString(36).substring(7),
