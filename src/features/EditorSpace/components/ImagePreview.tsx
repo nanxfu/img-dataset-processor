@@ -117,6 +117,7 @@ const CropRegionPreview = styled.img`
 
   /* 交互属性 */
   user-select: none;
+  pointer-events: none;
 
   /* 动画属性 */
   transition: transform 0.3s ease-in-out;
@@ -148,7 +149,7 @@ const ImagePreview: React.FC = () => {
     handleMouseUp();
     const imageArea = imageRef.current!.naturalWidth * imageRef.current!.naturalHeight;
     const cropRegionAreaPercentage = cropRegionArea / imageArea;
-    setScalingFactor(Math.min(maxScalingFactor, scalingFactor + 0.4));
+    // setScalingFactor(Math.min(maxScalingFactor, scalingFactor + 0.4));
   }, [handleMouseUp, cropRegionArea, scalingFactor]);
 
   return (
@@ -165,7 +166,7 @@ const ImagePreview: React.FC = () => {
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUpEvent}
-                onMouseLeave={handleMouseUp}
+                onMouseLeave={handleMouseUpEvent}
                 style={{
                   transform: `translateX(-50%) scale(${scalingFactor})`,
                 }}
