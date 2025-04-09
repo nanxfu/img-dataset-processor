@@ -1,9 +1,8 @@
-import {
-  Layout,
-} from "antd";
-import "./App.css";
-import ToolSidebar from "./features/ToolBar/ToolSidebar";
-import EditorLayout from "./features/EditorSpace/EditorSpace";
+import { Layout } from 'antd';
+
+import './App.css';
+import EditorLayout from './features/EditorSpace/EditorSpace';
+import ToolSidebar from './features/ToolBar/ToolSidebar';
 
 // const oldVersion = function () {
 //   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -47,21 +46,21 @@ import EditorLayout from "./features/EditorSpace/EditorSpace";
 //           }}
 //         >
 //           <div style={{ padding: "16px" }}>
-            // <Upload
-            //   accept="image/*"
-            //   multiple
-            //   showUploadList={false}
-            //   customRequest={({ onSuccess }) => {
-            //     setTimeout(() => {
-            //       onSuccess?.(null);
-            //     }, 0);
-            //   }}
-            //   onChange={handleFileUpload}
-            // >
-            //   <Button icon={<FolderOpenOutlined />} block type="primary">
-            //     导入图片
-            //   </Button>
-            // </Upload>
+// <Upload
+//   accept="image/*"
+//   multiple
+//   showUploadList={false}
+//   customRequest={({ onSuccess }) => {
+//     setTimeout(() => {
+//       onSuccess?.(null);
+//     }, 0);
+//   }}
+//   onChange={handleFileUpload}
+// >
+//   <Button icon={<FolderOpenOutlined />} block type="primary">
+//     导入图片
+//   </Button>
+// </Upload>
 //             <div>
 //               <div style={{ padding: "16px" }}>
 //                 <ActionButton
@@ -210,7 +209,7 @@ import EditorLayout from "./features/EditorSpace/EditorSpace";
 // };
 function App() {
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ minHeight: '100vh' }}>
       <ToolSidebar />
       <EditorLayout />
     </Layout>
