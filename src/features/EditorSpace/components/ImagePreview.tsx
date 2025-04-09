@@ -9,14 +9,117 @@ import { useImageStore } from '../../../store/useImageStore';
 import ThumbnailPanel from './ThumbnailPanel';
 
 const CanvasControlsPanel = styled.div`
+  /* 布局属性 */
   display: flex;
   position: relative;
+  flex-direction: column;
   flex: 1;
+
+  /* 盒模型属性 */
   margin: 24px;
   margin-left: 0;
-  flex-direction: column;
-  background-color: #fff;
   border-radius: 16px;
+
+  /* 视觉属性 */
+  background-color: #fff;
+`;
+
+const OperationArea = styled.div`
+  /* 盒模型属性 */
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+`;
+
+const OutlineArea = styled.div`
+  /* 布局属性 */
+  position: relative;
+  overflow: hidden;
+
+  /* 盒模型属性 */
+  width: 100%;
+  height: 100%;
+  border: 2px dashed rgba(255, 105, 180, 0.5);
+  border-radius: 16px;
+`;
+
+const MetadataPanel = styled.div`
+  /* 布局属性 */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+
+  /* 盒模型属性 */
+  margin: 16px;
+  padding: 8px 16px;
+  border-radius: 12px;
+
+  /* 视觉属性 */
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  /* 文本属性 */
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+
+  /* 动画属性 */
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+  }
+`;
+
+const PreviewImage = styled.img`
+  /* 布局属性 */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* 盒模型属性 */
+  max-width: 100%;
+  max-height: 100%;
+
+  /* 视觉属性 */
+  filter: brightness(0.5);
+  object-fit: contain;
+
+  /* 交互属性 */
+  cursor: crosshair;
+  user-select: none;
+
+  /* 动画属性 */
+  transition: transform 0.3s ease-in-out;
+`;
+
+const CropRegionPreview = styled.img`
+  /* 布局属性 */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* 盒模型属性 */
+  max-width: 100%;
+  max-height: 100%;
+
+  /* 视觉属性 */
+  object-fit: contain;
+
+  /* 交互属性 */
+  user-select: none;
+
+  /* 动画属性 */
+  transition: transform 0.3s ease-in-out;
 `;
 
 const ImagePreview: React.FC = () => {
@@ -28,6 +131,7 @@ const ImagePreview: React.FC = () => {
   const { cropRegion, handleMouseDown, handleMouseMove, handleMouseUp } = useCropRegionDrawer({
     imageRef,
   });
+
   useEffect(() => {
     setPreviewImage(images[0]);
   }, [images]);
@@ -42,63 +146,50 @@ const ImagePreview: React.FC = () => {
 
   const handleMouseUpEvent = useCallback(() => {
     handleMouseUp();
-    // 计算Corp Region占原始宽高图片的百分比。占的越少放大越大
     const imageArea = imageRef.current!.naturalWidth * imageRef.current!.naturalHeight;
     const cropRegionAreaPercentage = cropRegionArea / imageArea;
-    // TODO: 优化放大体验
     setScalingFactor(Math.min(maxScalingFactor, scalingFactor + 0.4));
   }, [handleMouseUp, cropRegionArea, scalingFactor]);
 
   return (
     <CanvasControlsPanel>
-      <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-        {previewImage && (
-          <React.Fragment>
-            <img
-              ref={imageRef}
-              src={previewImage.url}
-              alt={previewImage.name}
-              className="maskImage"
-              draggable={false}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUpEvent}
-              onMouseLeave={handleMouseUp}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                transform: `translateX(-50%) scale(${scalingFactor})`,
-                maxWidth: '100%',
-                maxHeight: '100%',
-                filter: 'brightness(0.5)',
-                objectFit: 'contain',
-                cursor: 'crosshair',
-                userSelect: 'none',
-                transition: 'transform 0.3s ease-in-out',
-              }}
-            />
-            <img
-              className="cropRegionPreview"
-              draggable={false}
-              src={images[0].url}
-              alt={images[0].name}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                transform: `translateX(-50%) scale(${scalingFactor})`,
-                maxWidth: '100%',
-                maxHeight: '100%',
-                clipPath: `inset(${cropRegion.top / scalingFactor}px ${
-                  cropRegion.right / scalingFactor
-                }px ${cropRegion.bottom / scalingFactor}px ${cropRegion.left / scalingFactor}px)`,
-                objectFit: 'contain',
-                userSelect: 'none',
-                transition: 'transform 0.3s ease-in-out',
-              }}
-            />
-          </React.Fragment>
-        )}
-      </div>
+      <OperationArea>
+        <OutlineArea>
+          {previewImage && (
+            <React.Fragment>
+              <PreviewImage
+                ref={imageRef}
+                src={previewImage.url}
+                alt={previewImage.name}
+                draggable={false}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUpEvent}
+                onMouseLeave={handleMouseUp}
+                style={{
+                  transform: `translateX(-50%) scale(${scalingFactor})`,
+                }}
+              />
+              <CropRegionPreview
+                draggable={false}
+                src={previewImage.url}
+                alt={previewImage.name}
+                style={{
+                  transform: `translateX(-50%) scale(${scalingFactor})`,
+                  clipPath: `inset(${cropRegion.top / scalingFactor}px ${
+                    cropRegion.right / scalingFactor
+                  }px ${cropRegion.bottom / scalingFactor}px ${cropRegion.left / scalingFactor}px)`,
+                }}
+              />
+            </React.Fragment>
+          )}
+          <MetadataPanel>
+            <div>
+              <span>800 × 600px | 2.3MB</span>
+            </div>
+          </MetadataPanel>
+        </OutlineArea>
+      </OperationArea>
       <ThumbnailPanel />
     </CanvasControlsPanel>
   );
