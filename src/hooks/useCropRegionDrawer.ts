@@ -24,7 +24,14 @@ export interface UseCropRegionDrawerResult {
   handleMouseMove: (e: React.MouseEvent<HTMLImageElement>) => void;
   handleMouseUp: () => void;
 }
-
+export const caculateCropCenter = ({ top, right, bottom, left }: CropRegion) => {
+  const width = right - left;
+  const height = bottom - top;
+  return {
+    x: left + width / 2,
+    y: top + height / 2,
+  };
+};
 export const useCropRegionDrawer = ({
   imageRef,
   initialRegion = { top: 200, right: 200, bottom: 200, left: 200 },
@@ -33,17 +40,20 @@ export const useCropRegionDrawer = ({
   const [startPos, setStartPos] = useState<Point>({ x: 0, y: 0 });
   const [cropRegion, setCropRegion] = useState<CropRegion>(initialRegion);
 
-  /* 获取以图片左上角为原点的相对位置 */
+  /**
+   * 计算鼠标事件相对于图片元素的坐标位置
+   * @param e - 鼠标事件对象
+   * @returns 返回相对于图片左上角的坐标点，如果图片元素不存在则返回null
+   */
   const getRelativePosition = useCallback(
     (e: React.MouseEvent<HTMLImageElement>): Point | null => {
       if (!imageRef.current) return null;
 
-      const rect = imageRef.current.getBoundingClientRect();
-      console.log(rect);
+      const imageBoundingBox = imageRef.current.getBoundingClientRect();
 
       return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: e.clientX - imageBoundingBox.left,
+        y: e.clientY - imageBoundingBox.top,
       };
     },
     [imageRef]
@@ -92,8 +102,6 @@ export const useCropRegionDrawer = ({
   );
 
   const handleMouseUp = useCallback(() => {
-    console.table(['Crop Region', cropRegion, 'Start Position', startPos]);
-    debugger;
     setIsDrawing(false);
   }, []);
 
