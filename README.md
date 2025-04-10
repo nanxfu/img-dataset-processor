@@ -1,5 +1,6 @@
-# 图片数据集处理器 (Image Dataset Processor)
+# EasyLora (Image Dataset Processor)
 
+Your First Step into the Magical World
 这是一个基于React和TypeScript开发的图片数据集处理工具，可用于lora数据集处理。提供了图片预览、裁剪和编辑等用户友好，开箱即用的功能。
 
 ## 技术栈

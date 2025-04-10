@@ -3,7 +3,6 @@ import React from 'react';
 import { styled } from 'styled-components';
 
 import { useCropRegionDrawer } from '../../../hooks/useCropRegionDrawer';
-import { Image as ImageType } from '../../../store/useImageStore';
 import { useImageStore } from '../../../store/useImageStore';
 
 import ThumbnailPanel from './ThumbnailPanel';
@@ -33,6 +32,9 @@ const OperationArea = styled.div`
 
 const OutlineArea = styled.div`
   /* 布局属性 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
   overflow: hidden;
 
@@ -147,8 +149,6 @@ const ZoomButton = styled.button`
 const PreviewImage = styled.img`
   /* 布局属性 */
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 
   /* 盒模型属性 */
   max-width: 100%;
@@ -169,8 +169,6 @@ const PreviewImage = styled.img`
 const CropRegionPreview = styled.img`
   /* 布局属性 */
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 
   /* 盒模型属性 */
   max-width: 100%;
@@ -190,20 +188,24 @@ const CropRegionPreview = styled.img`
   will-change: transform, clip-path;
 `;
 
+const maxScalingFactor = 2;
+const minScalingFactor = 1;
+
 const ImagePreview: React.FC = () => {
   const images = useImageStore(state => state.images);
+  const selectedImage = useImageStore(state => state.selectedImage);
   const imageRef = useRef<HTMLImageElement>(null);
   const [scalingFactor, setScalingFactor] = useState(1);
-  const [previewImage, setPreviewImage] = useState<ImageType>();
-  const maxScalingFactor = 2;
-  const minScalingFactor = 0.5;
+
   const { cropRegion, handleMouseDown, handleMouseMove, handleMouseUp } = useCropRegionDrawer({
     imageRef,
   });
 
   useEffect(() => {
-    setPreviewImage(images[0]);
-  }, [images]);
+    if (images.length > 0 && !selectedImage) {
+      useImageStore.getState().selectImage(images[0].id);
+    }
+  }, [images, selectedImage]);
 
   const cropRegionArea = useMemo(() => {
     if (!imageRef.current) return 0;
@@ -217,8 +219,7 @@ const ImagePreview: React.FC = () => {
     handleMouseUp();
     const imageArea = imageRef.current!.naturalWidth * imageRef.current!.naturalHeight;
     const cropRegionAreaPercentage = cropRegionArea / imageArea;
-    // setScalingFactor(Math.min(maxScalingFactor, scalingFactor + 0.4));
-  }, [handleMouseUp, cropRegionArea, scalingFactor]);
+  }, [handleMouseUp, cropRegionArea]);
 
   const handleZoomIn = useCallback(() => {
     setScalingFactor(prev => Math.min(maxScalingFactor, prev + 0.2));
@@ -232,27 +233,27 @@ const ImagePreview: React.FC = () => {
     <CanvasControlsPanel>
       <OperationArea>
         <OutlineArea>
-          {previewImage && (
+          {selectedImage && (
             <React.Fragment>
               <PreviewImage
                 ref={imageRef}
-                src={previewImage.url}
-                alt={previewImage.name}
+                src={selectedImage.url}
+                alt={selectedImage.name}
                 draggable={false}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUpEvent}
                 onMouseLeave={handleMouseUpEvent}
                 style={{
-                  transform: `translateX(-50%) scale(${scalingFactor})`,
+                  transform: `scale(${scalingFactor})`,
                 }}
               />
               <CropRegionPreview
                 draggable={false}
-                src={previewImage.url}
-                alt={previewImage.name}
+                src={selectedImage.url}
+                alt={selectedImage.name}
                 style={{
-                  transform: `translateX(-50%) scale(${scalingFactor})`,
+                  transform: `scale(${scalingFactor})`,
                   clipPath: `inset(${cropRegion.top / scalingFactor}px ${
                     cropRegion.right / scalingFactor
                   }px ${cropRegion.bottom / scalingFactor}px ${cropRegion.left / scalingFactor}px)`,
@@ -283,7 +284,7 @@ const ImagePreview: React.FC = () => {
           </ZoomControls>
         </OutlineArea>
       </OperationArea>
-      <ThumbnailPanel />
+      <ThumbnailPanel isVisible={true} />
     </CanvasControlsPanel>
   );
 };
