@@ -166,7 +166,7 @@ const PreviewImage = styled.img`
   transition: transform 0.3s ease-in-out;
 `;
 
-const CropRegionPreview = styled.img`
+const CropRegionPreview = styled.img<{ $isDrawing: boolean }>`
   /* 布局属性 */
   position: absolute;
 
@@ -184,7 +184,7 @@ const CropRegionPreview = styled.img`
   /* 动画属性 */
   transition:
     transform 0.3s ease-in-out,
-    clip-path 0.3s ease-in-out;
+    ${props => (!props.$isDrawing ? 'clip-path 0.3s ease-in-out' : 'none')};
   will-change: transform, clip-path;
 `;
 
@@ -197,9 +197,10 @@ const ImagePreview: React.FC = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const [scalingFactor, setScalingFactor] = useState(1);
 
-  const { cropRegion, handleMouseDown, handleMouseMove, handleMouseUp } = useCropRegionDrawer({
-    imageRef,
-  });
+  const { cropRegion, isDrawing, handleMouseDown, handleMouseMove, handleMouseUp } =
+    useCropRegionDrawer({
+      imageRef,
+    });
 
   useEffect(() => {
     if (images.length > 0 && !selectedImage) {
@@ -252,6 +253,7 @@ const ImagePreview: React.FC = () => {
                 draggable={false}
                 src={selectedImage.url}
                 alt={selectedImage.name}
+                $isDrawing={isDrawing}
                 style={{
                   transform: `scale(${scalingFactor})`,
                   clipPath: `inset(${cropRegion.top / scalingFactor}px ${
