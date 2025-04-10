@@ -194,12 +194,14 @@ const minScalingFactor = 1;
 const ImagePreview: React.FC = () => {
   const images = useImageStore(state => state.images);
   const selectedImage = useImageStore(state => state.selectedImage);
+  const isCropMode = useImageStore(state => state.isCropMode);
   const imageRef = useRef<HTMLImageElement>(null);
   const [scalingFactor, setScalingFactor] = useState(1);
 
   const { cropRegion, isDrawing, handleMouseDown, handleMouseMove, handleMouseUp } =
     useCropRegionDrawer({
       imageRef,
+      initialRegion: isCropMode ? { top: 200, right: 200, bottom: 200, left: 200 } : undefined,
     });
 
   useEffect(() => {
@@ -241,26 +243,29 @@ const ImagePreview: React.FC = () => {
                 src={selectedImage.url}
                 alt={selectedImage.name}
                 draggable={false}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUpEvent}
-                onMouseLeave={handleMouseUpEvent}
+                onMouseDown={isCropMode ? handleMouseDown : undefined}
+                onMouseMove={isCropMode ? handleMouseMove : undefined}
+                onMouseUp={isCropMode ? handleMouseUpEvent : undefined}
+                onMouseLeave={isCropMode ? handleMouseUpEvent : undefined}
                 style={{
                   transform: `scale(${scalingFactor})`,
+                  cursor: isCropMode ? 'crosshair' : 'default',
                 }}
               />
-              <CropRegionPreview
-                draggable={false}
-                src={selectedImage.url}
-                alt={selectedImage.name}
-                $isDrawing={isDrawing}
-                style={{
-                  transform: `scale(${scalingFactor})`,
-                  clipPath: `inset(${cropRegion.top / scalingFactor}px ${
-                    cropRegion.right / scalingFactor
-                  }px ${cropRegion.bottom / scalingFactor}px ${cropRegion.left / scalingFactor}px)`,
-                }}
-              />
+              {isCropMode && (
+                <CropRegionPreview
+                  draggable={false}
+                  src={selectedImage.url}
+                  alt={selectedImage.name}
+                  $isDrawing={isDrawing}
+                  style={{
+                    transform: `scale(${scalingFactor})`,
+                    clipPath: `inset(${cropRegion.top / scalingFactor}px ${
+                      cropRegion.right / scalingFactor
+                    }px ${cropRegion.bottom / scalingFactor}px ${cropRegion.left / scalingFactor}px)`,
+                  }}
+                />
+              )}
             </React.Fragment>
           )}
           <MetadataPanel>

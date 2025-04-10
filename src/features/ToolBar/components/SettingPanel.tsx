@@ -7,6 +7,9 @@ const PanelContainer = styled.section`
 
   /* 盒模型属性 */
   border-bottom: 1px solid #f0f0f0;
+  margin: 25px 0px;
+  padding: 0px 16px;
+  border-radius: 16px;
 `;
 
 const PanelTitle = styled.header`
@@ -17,7 +20,9 @@ const PanelTitle = styled.header`
 
   /* 盒模型属性 */
   padding: 0 20px;
+  border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
+  border-radius: 16px 16px 0 0;
 
   /* 视觉属性 */
   background-color: #fff5f7;
@@ -47,7 +52,7 @@ const PanelContent = styled.div`
   background-color: #ffffff;
 `;
 
-const ToolButton = styled.div`
+const ToolButton = styled.div<{ $isActive?: boolean }>`
   /* 布局属性 */
   display: flex;
   align-items: center;
@@ -58,7 +63,8 @@ const ToolButton = styled.div`
   border-radius: 6px;
 
   /* 视觉属性 */
-  color: #1a1a1a;
+  color: ${props => (props.$isActive ? '#ff69b4' : '#1a1a1a')};
+  background-color: ${props => (props.$isActive ? '#fff5f7' : 'transparent')};
   cursor: pointer;
 
   /* 文本属性 */
@@ -77,12 +83,28 @@ const ToolButton = styled.div`
   }
 `;
 
-const SettingPanel: React.FC<{ title: string }> = ({ title }) => {
+interface ToolItem {
+  id: string;
+  label: string;
+  onClick: () => void;
+  isActive?: boolean;
+}
+
+interface SettingPanelProps {
+  title: string;
+  tools: ToolItem[];
+}
+
+const SettingPanel: React.FC<SettingPanelProps> = ({ title, tools }) => {
   return (
     <PanelContainer>
       <PanelTitle>{title}</PanelTitle>
       <PanelContent>
-        <ToolButton>喵喵喵</ToolButton>
+        {tools.map(tool => (
+          <ToolButton key={tool.id} onClick={tool.onClick} $isActive={tool.isActive}>
+            {tool.label}
+          </ToolButton>
+        ))}
       </PanelContent>
     </PanelContainer>
   );

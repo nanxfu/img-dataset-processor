@@ -45,6 +45,7 @@ const UploadImageArea = styled.div`
   height: 160px;
 
   /* 盒模型属性 */
+  margin: 25px 0px;
   padding: 24px;
   border-bottom: 1px solid #f0f0f0;
 
@@ -80,6 +81,9 @@ const UploadButton = styled(Button)`
 
 const ToolSidebar: React.FC = () => {
   const addImage = useImageStore(state => state.addImage);
+  const selectedImage = useImageStore(state => state.selectedImage);
+  const isCropMode = useImageStore(state => state.isCropMode);
+  const setCropMode = useImageStore(state => state.setCropMode);
 
   const handleFileUpload = (info: UploadChangeParam) => {
     if (info.file && info.file.status !== 'uploading') {
@@ -92,6 +96,29 @@ const ToolSidebar: React.FC = () => {
       addImage(newImage);
     }
   };
+
+  const imageProcessingTools = [
+    {
+      id: 'crop',
+      label: '调整尺寸',
+      onClick: () => {
+        if (selectedImage) {
+          setCropMode(!isCropMode);
+        }
+      },
+      isActive: isCropMode,
+    },
+  ];
+
+  const advancedSettingsTools = [
+    {
+      id: 'other',
+      label: '其他设置',
+      onClick: () => {
+        // 处理其他设置
+      },
+    },
+  ];
 
   return (
     <StyledSider width={280}>
@@ -113,8 +140,8 @@ const ToolSidebar: React.FC = () => {
           </UploadButton>
         </Upload>
       </UploadImageArea>
-      <SettingPanel title="图片处理" />
-      <SettingPanel title="高级设置" />
+      <SettingPanel title="图片处理" tools={imageProcessingTools} />
+      <SettingPanel title="高级设置" tools={advancedSettingsTools} />
     </StyledSider>
   );
 };

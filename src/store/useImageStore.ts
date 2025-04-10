@@ -10,16 +10,19 @@ export interface Image {
 interface ImageState {
   images: Image[];
   selectedImage: Image | null;
+  isCropMode: boolean;
   addImage: (image: Image) => void;
   removeImage: (id: string) => void;
   selectImage: (id: string) => void;
   clearImages: () => void;
+  setCropMode: (isCropMode: boolean) => void;
 }
 
 export const useImageStore = create<ImageState>()(
   devtools(set => ({
     images: [],
     selectedImage: null,
+    isCropMode: false,
     addImage: image =>
       set(state => ({
         images: [...state.images, image],
@@ -35,5 +38,6 @@ export const useImageStore = create<ImageState>()(
         selectedImage: state.images.find(img => img.id === id) || null,
       })),
     clearImages: () => set({ images: [], selectedImage: null }),
+    setCropMode: isCropMode => set({ isCropMode }),
   }))
 );
