@@ -197,6 +197,13 @@ const ImagePreview: React.FC = () => {
   const isCropMode = useImageStore(state => state.isCropMode);
   const imageRef = useRef<HTMLImageElement>(null);
   const [scalingFactor, setScalingFactor] = useState(1);
+  //计算图像缩放比例
+  const calculateScalingFactor = useCallback(() => {
+    if (!imageRef.current) return 1;
+    const { naturalWidth, naturalHeight } = imageRef.current;
+    const { clientWidth, clientHeight } = imageRef.current;
+    return Math.min(clientWidth / naturalWidth, clientHeight / naturalHeight);
+  }, []);
 
   const { cropRegion, isDrawing, handleMouseDown, handleMouseMove, handleMouseUp } =
     useCropRegionDrawer({
@@ -231,6 +238,57 @@ const ImagePreview: React.FC = () => {
   const handleZoomOut = useCallback(() => {
     setScalingFactor(prev => Math.max(minScalingFactor, prev - 0.2));
   }, []);
+
+  // 导出裁剪后的图片
+  const exportCroppedImage = useCallback(async () => {
+    if (!imageRef.current || !selectedImage) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 设置画布尺寸为裁剪区域大小
+    const width =
+      (imageRef.current.clientWidth - cropRegion.left - cropRegion.right) /
+      calculateScalingFactor();
+    const height =
+      (imageRef.current.clientHeight - cropRegion.top - cropRegion.bottom) /
+      calculateScalingFactor();
+    canvas.width = width;
+    canvas.height = height;
+    // 绘制裁剪后的图片
+    ctx.drawImage(
+      imageRef.current,
+      cropRegion.left / calculateScalingFactor(),
+      cropRegion.top / calculateScalingFactor(),
+      width,
+      height,
+      0,
+      0,
+      width,
+      height
+    );
+    // 转换为Blob并下载;
+    canvas.toBlob(blob => {
+      if (!blob) return;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cropped_${selectedImage.name}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  }, [
+    calculateScalingFactor,
+    cropRegion.bottom,
+    cropRegion.left,
+    cropRegion.right,
+    cropRegion.top,
+    selectedImage,
+  ]);
 
   return (
     <CanvasControlsPanel>
@@ -271,6 +329,22 @@ const ImagePreview: React.FC = () => {
           <MetadataPanel>
             <div>
               <span>800 × 600px | 2.3MB</span>
+              {isCropMode && (
+                <button
+                  onClick={exportCroppedImage}
+                  style={{
+                    marginLeft: '16px',
+                    padding: '4px 8px',
+                    backgroundColor: '#ff69b4',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  导出裁剪图片
+                </button>
+              )}
             </div>
           </MetadataPanel>
           <ZoomControls>
