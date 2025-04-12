@@ -44,6 +44,7 @@ const PanelContent = styled.div`
   /* 布局属性 */
   display: flex;
   flex-direction: column;
+  gap: 12px;
 
   /* 盒模型属性 */
   padding: 16px 20px;

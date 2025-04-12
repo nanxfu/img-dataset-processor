@@ -1,4 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+
+import { useImageRef } from '../hooks/useImageContextHooks';
+
 // TODO - 增加图片缩放功能
 export interface Point {
   x: number;
@@ -13,7 +16,7 @@ export interface CropRegion {
 }
 
 export interface UseCropRegionDrawerProps {
-  imageRef: React.RefObject<HTMLImageElement>;
+  imageRef?: React.RefObject<HTMLImageElement>;
   initialRegion?: CropRegion;
 }
 
@@ -33,9 +36,13 @@ export const caculateCropCenter = ({ top, right, bottom, left }: CropRegion) => 
   };
 };
 export const useCropRegionDrawer = ({
-  imageRef,
+  imageRef: propImageRef,
   initialRegion = { top: 200, right: 200, bottom: 200, left: 200 },
 }: UseCropRegionDrawerProps): UseCropRegionDrawerResult => {
+  const { imageRef: contextImageRef } = useImageRef();
+  // 使用提供的imageRef或Context中的imageRef
+  const imageRef = propImageRef || contextImageRef;
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState<Point>({ x: 0, y: 0 });
   const [cropRegion, setCropRegion] = useState<CropRegion>(initialRegion);

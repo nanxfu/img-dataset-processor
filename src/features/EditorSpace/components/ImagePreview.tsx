@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 import { styled } from 'styled-components';
 
 import { useCropImage } from '../../../hooks/useCropImage';
 import { useCropRegionDrawer } from '../../../hooks/useCropRegionDrawer';
+import { useImageRef } from '../../../hooks/useImageContextHooks';
 import { useImageStore } from '../../../store/useImageStore';
 
 import ThumbnailPanel from './ThumbnailPanel';
@@ -196,7 +197,7 @@ const ImagePreview: React.FC = () => {
   const images = useImageStore(state => state.images);
   const selectedImage = useImageStore(state => state.selectedImage);
   const isCropMode = useImageStore(state => state.isCropMode);
-  const imageRef = useRef<HTMLImageElement>(null);
+  const { imageRef } = useImageRef();
   const [scalingFactor, setScalingFactor] = useState(1);
 
   const { cropRegion, isDrawing, handleMouseDown, handleMouseMove, handleMouseUp } =
@@ -218,18 +219,20 @@ const ImagePreview: React.FC = () => {
   }, [images, selectedImage]);
 
   const cropRegionArea = useMemo(() => {
-    if (!imageRef.current) return 0;
+    if (!imageRef?.current) return 0;
     return (
-      (imageRef.current!.clientWidth / scalingFactor - cropRegion.left - cropRegion.right) *
-      (imageRef.current!.clientHeight / scalingFactor - cropRegion.top - cropRegion.bottom)
+      (imageRef.current.clientWidth / scalingFactor - cropRegion.left - cropRegion.right) *
+      (imageRef.current.clientHeight / scalingFactor - cropRegion.top - cropRegion.bottom)
     );
-  }, [cropRegion, scalingFactor]);
+  }, [cropRegion, scalingFactor, imageRef]);
 
   const handleMouseUpEvent = useCallback(() => {
     handleMouseUp();
-    const imageArea = imageRef.current!.naturalWidth * imageRef.current!.naturalHeight;
-    const cropRegionAreaPercentage = cropRegionArea / imageArea;
-  }, [handleMouseUp, cropRegionArea]);
+    if (imageRef?.current) {
+      const imageArea = imageRef.current.naturalWidth * imageRef.current.naturalHeight;
+      const cropRegionAreaPercentage = cropRegionArea / imageArea;
+    }
+  }, [handleMouseUp, cropRegionArea, imageRef]);
 
   const handleZoomIn = useCallback(() => {
     setScalingFactor(prev => Math.min(maxScalingFactor, prev + 0.2));

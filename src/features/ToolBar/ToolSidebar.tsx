@@ -1,5 +1,5 @@
 import { FolderOpenOutlined } from '@ant-design/icons';
-import { Button, Layout, Upload } from 'antd';
+import { Button, Layout, notification, Upload } from 'antd';
 import { RcFile, UploadChangeParam } from 'antd/es/upload';
 import styled from 'styled-components';
 
@@ -84,7 +84,14 @@ const ToolSidebar: React.FC = () => {
   const selectedImage = useImageStore(state => state.selectedImage);
   const isCropMode = useImageStore(state => state.isCropMode);
   const setCropMode = useImageStore(state => state.setCropMode);
+  const [api, contextHolder] = notification.useNotification();
 
+  const openNotification = () => {
+    api.info({
+      message: '提示',
+      description: '请先选择或者导入图片',
+    });
+  };
   const handleFileUpload = (info: UploadChangeParam) => {
     if (info.file && info.file.status !== 'uploading') {
       const file = info.file.originFileObj as RcFile;
@@ -104,9 +111,19 @@ const ToolSidebar: React.FC = () => {
       onClick: () => {
         if (selectedImage) {
           setCropMode(!isCropMode);
+        } else {
+          openNotification();
         }
       },
       isActive: isCropMode,
+    },
+    {
+      id: 'repair',
+      label: '高清修复',
+      onClick: () => {
+        // 处理调整尺寸
+      },
+      isActive: false,
     },
   ];
 
@@ -122,6 +139,7 @@ const ToolSidebar: React.FC = () => {
 
   return (
     <StyledSider width={280}>
+      {contextHolder}
       <AppTitle>图片数据集处理器</AppTitle>
       <UploadImageArea>
         <Upload
