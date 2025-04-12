@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useCallback } from 'react';
 
 import { ImageRefContext } from '../contexts/ImageRefContext';
 
@@ -17,7 +17,7 @@ export const useImageRef = () => {
 export const useImageSize = () => {
   const { imageRef } = useImageRef();
 
-  const getNaturalSize = () => {
+  const getNaturalSize = useCallback(() => {
     if (!imageRef?.current) {
       return { width: 0, height: 0 };
     }
@@ -26,9 +26,9 @@ export const useImageSize = () => {
       width: imageRef.current.naturalWidth,
       height: imageRef.current.naturalHeight,
     };
-  };
+  }, [imageRef]);
 
-  const getDisplaySize = () => {
+  const getDisplaySize = useCallback(() => {
     if (!imageRef?.current) {
       return { width: 0, height: 0 };
     }
@@ -37,7 +37,7 @@ export const useImageSize = () => {
       width: imageRef.current.clientWidth,
       height: imageRef.current.clientHeight,
     };
-  };
+  }, [imageRef]);
 
   return { getNaturalSize, getDisplaySize };
 };

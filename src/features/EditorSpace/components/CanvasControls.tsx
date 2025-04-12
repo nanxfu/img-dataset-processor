@@ -111,14 +111,24 @@ const CanvasControls: React.FC = () => {
   }, [selectedImage, getNaturalSize]);
 
   // 处理尺寸变化
-  const handleWidthChange = (newWidth: number) => {
-    setWidth(newWidth);
-    // 可以在这里添加应用尺寸变化的逻辑
+  const handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newWidth = parseInt(event.target.value, 10);
+    if (!isNaN(newWidth)) {
+      setWidth(newWidth);
+      // 可以在这里添加应用尺寸变化的逻辑
+    } else if (event.target.value === '') {
+      setWidth(0); // 或者根据需要处理空输入
+    }
   };
 
-  const handleHeightChange = (newHeight: number) => {
-    setHeight(newHeight);
-    // 可以在这里添加应用尺寸变化的逻辑
+  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newHeight = parseInt(event.target.value, 10);
+    if (!isNaN(newHeight)) {
+      setHeight(newHeight);
+      // 可以在这里添加应用尺寸变化的逻辑
+    } else if (event.target.value === '') {
+      setHeight(0); // 或者根据需要处理空输入
+    }
   };
 
   // 处理预设比例点击
@@ -149,22 +159,14 @@ const CanvasControls: React.FC = () => {
           <InputWrapper>
             <Label>宽度</Label>
             <InputWithUnit>
-              <CapsuleInput
-                type="number"
-                value={width}
-                onChange={e => handleWidthChange(Number(e.target.value))}
-              />
+              <CapsuleInput type="number" value={width} onChange={handleWidthChange} />
               <UnitLabel>px</UnitLabel>
             </InputWithUnit>
           </InputWrapper>
           <InputWrapper>
             <Label>高度</Label>
             <InputWithUnit>
-              <CapsuleInput
-                type="number"
-                value={height}
-                onChange={e => handleHeightChange(Number(e.target.value))}
-              />
+              <CapsuleInput type="number" value={height} onChange={handleHeightChange} />
               <UnitLabel>px</UnitLabel>
             </InputWithUnit>
           </InputWrapper>
