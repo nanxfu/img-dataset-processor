@@ -96,19 +96,17 @@ const ScaleButton = styled(PresetButton)``;
 const CanvasControls: React.FC = () => {
   const isCropMode = useImageStore(state => state.isCropMode);
   const selectedImage = useImageStore(state => state.selectedImage);
-  const { getNaturalSize } = useImageSize();
+  const { naturalSize } = useImageSize();
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    if (selectedImage) {
-      const { width: naturalWidth, height: naturalHeight } = getNaturalSize();
-      if (naturalWidth > 0 && naturalHeight > 0) {
-        setWidth(naturalWidth);
-        setHeight(naturalHeight);
-      }
+    if (selectedImage && naturalSize.width > 0 && naturalSize.height > 0) {
+      console.log('naturalSize', naturalSize);
+      setWidth(naturalSize.width);
+      setHeight(naturalSize.height);
     }
-  }, [selectedImage, getNaturalSize]);
+  }, [naturalSize]);
 
   // 处理尺寸变化
   const handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {

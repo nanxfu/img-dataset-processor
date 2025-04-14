@@ -18,7 +18,6 @@ const CanvasControlsPanel = styled.div`
 
   /* 盒模型属性 */
   margin: 24px;
-  margin-left: 0;
   border-radius: 16px;
 
   /* 视觉属性 */
