@@ -204,6 +204,7 @@ const ImagePreview: React.FC = () => {
     useCropRegionDrawer({
       imageRef,
       initialRegion: isCropMode ? { top: 200, right: 200, bottom: 200, left: 200 } : undefined,
+      scalingFactor,
     });
 
   const { exportCroppedImage } = useCropImage({
@@ -270,9 +271,9 @@ const ImagePreview: React.FC = () => {
                   $isDrawing={isDrawing}
                   style={{
                     transform: `scale(${scalingFactor})`,
-                    clipPath: `inset(${cropRegion.top / scalingFactor}px ${
-                      cropRegion.right / scalingFactor
-                    }px ${cropRegion.bottom / scalingFactor}px ${cropRegion.left / scalingFactor}px)`,
+                    clipPath: `inset(${cropRegion.top}px ${
+                      cropRegion.right
+                    }px ${cropRegion.bottom}px ${cropRegion.left}px)`,
                   }}
                 />
               )}
