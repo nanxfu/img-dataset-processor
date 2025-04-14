@@ -38,25 +38,33 @@ const AppTitle = styled.div`
 
 const UploadImageArea = styled.div`
   /* 布局属性 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+
   height: 160px;
 
   /* 盒模型属性 */
-  margin: 25px 0px;
-  padding: 24px;
+  margin: 25px 16px;
   border-bottom: 1px solid #f0f0f0;
 
   /* 视觉属性 */
-  background-color: #fff5f7;
-
+  border-radius: 8px;
   /* 动画属性 */
   transition: all 0.3s ease;
 
-  &:hover {
-    background-color: #ffe4e9;
+  & > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+
+    &:hover {
+      border-color: #ff69b4;
+    }
   }
 `;
 
@@ -142,21 +150,23 @@ const ToolSidebar: React.FC = () => {
       {contextHolder}
       <AppTitle>图片数据集处理器</AppTitle>
       <UploadImageArea>
-        <Upload
-          accept="image/*"
-          multiple
-          showUploadList={false}
-          customRequest={({ onSuccess }) => {
-            setTimeout(() => {
-              onSuccess?.(null);
-            }, 0);
-          }}
-          onChange={handleFileUpload}
-        >
-          <UploadButton icon={<FolderOpenOutlined />} block type="primary">
-            导入图片
-          </UploadButton>
-        </Upload>
+        <div className="outline">
+          <Upload
+            accept="image/*"
+            multiple
+            showUploadList={false}
+            customRequest={({ onSuccess }) => {
+              setTimeout(() => {
+                onSuccess?.(null);
+              }, 0);
+            }}
+            onChange={handleFileUpload}
+          >
+            <UploadButton icon={<FolderOpenOutlined />} block type="primary">
+              导入图片
+            </UploadButton>
+          </Upload>
+        </div>
       </UploadImageArea>
       <SettingPanel title="图片处理" tools={imageProcessingTools} />
       <SettingPanel title="高级设置" tools={advancedSettingsTools} />

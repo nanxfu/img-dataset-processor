@@ -56,12 +56,7 @@ export const useImageSize = () => {
         imgElement.removeEventListener('load', handleLoad);
       }
     };
-  }, [selectedImage]); // Depend on the image element itself if possible, or its src attribute if available
-
-  // No longer need selectedImage dependency here as the effect reacts to the imageRef.current changing or loading
-  // If selectedImage causes the <img> src to change, imageRef.current might stay the same initially,
-  // but the 'load' event will trigger the update.
-  // If the component displaying the image remounts with a new imageRef, the effect runs again.
+  }, [selectedImage]);
 
   return { naturalSize, displaySize };
 };
