@@ -18,6 +18,7 @@ export interface CropRegion {
 export interface UseCropRegionDrawerProps {
   imageRef?: React.RefObject<HTMLImageElement>;
   initialRegion?: CropRegion;
+  scalingFactor: number;
 }
 
 export interface UseCropRegionDrawerResult {
@@ -38,6 +39,7 @@ export const caculateCropCenter = ({ top, right, bottom, left }: CropRegion) => 
 export const useCropRegionDrawer = ({
   imageRef: propImageRef,
   initialRegion = { top: 200, right: 200, bottom: 200, left: 200 },
+  scalingFactor,
 }: UseCropRegionDrawerProps): UseCropRegionDrawerResult => {
   const { imageRef: contextImageRef } = useImageRef();
   // 使用提供的imageRef或Context中的imageRef
@@ -59,11 +61,11 @@ export const useCropRegionDrawer = ({
       const imageBoundingBox = imageRef.current.getBoundingClientRect();
 
       return {
-        x: e.clientX - imageBoundingBox.left,
-        y: e.clientY - imageBoundingBox.top,
+        x: (e.clientX - imageBoundingBox.left) / scalingFactor,
+        y: (e.clientY - imageBoundingBox.top) / scalingFactor,
       };
     },
-    [imageRef]
+    [imageRef, scalingFactor]
   );
 
   const calculateCropRegion = useCallback(
@@ -75,12 +77,12 @@ export const useCropRegionDrawer = ({
 
       return {
         top,
-        right: imageWidth - (left + width),
-        bottom: imageHeight - (top + height),
+        right: imageWidth / scalingFactor - (left + width),
+        bottom: imageHeight / scalingFactor - (top + height),
         left,
       };
     },
-    []
+    [scalingFactor]
   );
 
   const handleMouseDown = useCallback(
