@@ -86,8 +86,8 @@ const MetadataPanel = styled.div`
 const ZoomControls = styled.div`
   /* 布局属性 */
   position: absolute;
-  right: 0;
-  bottom: 0;
+  left: 0;
+  bottom: 64px;
 
   /* 盒模型属性 */
   margin: 16px;

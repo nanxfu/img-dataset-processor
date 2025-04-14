@@ -1,4 +1,4 @@
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 import { styled } from 'styled-components';
 
@@ -6,9 +6,9 @@ import { useImageStore } from '../../../store/useImageStore';
 
 const ThumbnailPanelContainer = styled.div<{ $isVisible: boolean }>`
   position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   padding: 12px;
   background-color: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
@@ -17,31 +17,33 @@ const ThumbnailPanelContainer = styled.div<{ $isVisible: boolean }>`
     0px 4px 6px -4px rgba(0, 0, 0, 0.1),
     0px 10px 15px -3px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
-  transform: translateX(-50%) translateY(${props => (props.$isVisible ? '0' : '100px')});
+  transform: translateY(-50%) translateX(${props => (props.$isVisible ? '0' : '100px')});
   opacity: ${props => (props.$isVisible ? '1' : '0')};
   pointer-events: ${props => (props.$isVisible ? 'auto' : 'none')};
   z-index: 1000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
-  height: 96px; /* 增加整体高度，为缩略图的hover效果留出空间 */
+  width: 96px; /* 为垂直布局设置固定宽度 */
   overflow: visible; /* 允许子元素溢出 */
 `;
 
 const ThumbnailsScrollContainer = styled.div`
   display: flex;
-  max-width: 500px;
-  overflow-x: hidden;
-  overflow-y: visible;
+  flex-direction: column;
+  max-height: 500px;
+  overflow-y: hidden;
+  overflow-x: visible;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 105, 180, 0.5) transparent;
-  height: 84px; /* 增加高度，为悬停放大效果留出空间 */
-  padding: 8px 0; /* 上下增加间距，为放大效果提供空间 */
+  width: 84px; /* 增加宽度，为悬停放大效果留出空间 */
+  padding: 0 8px; /* 左右增加间距，为放大效果提供空间 */
 
   /* 自定义滚动条样式 */
   &::-webkit-scrollbar {
-    height: 6px;
-    width: 0;
+    width: 6px;
+    height: 0;
   }
 
   &::-webkit-scrollbar-track {
@@ -61,9 +63,10 @@ const ThumbnailsScrollContainer = styled.div`
 
 const ThumbnailsWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 16px; /* 增加间隔，为悬停效果腾出更多空间 */
-  padding: 0 4px;
-  height: 64px; /* 与缩略图高度一致 */
+  padding: 4px 0;
+  width: 64px; /* 与缩略图宽度一致 */
   align-items: center;
 `;
 
@@ -123,22 +126,22 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollLeft = () => {
+  const scrollUp = () => {
     if (scrollContainerRef.current) {
-      const currentScroll = scrollContainerRef.current.scrollLeft;
+      const currentScroll = scrollContainerRef.current.scrollTop;
       scrollContainerRef.current.scrollTo({
-        left: currentScroll - 200,
+        top: currentScroll - 200,
         behavior: 'smooth',
       });
       setScrollPosition(currentScroll - 200);
     }
   };
 
-  const scrollRight = () => {
+  const scrollDown = () => {
     if (scrollContainerRef.current) {
-      const currentScroll = scrollContainerRef.current.scrollLeft;
+      const currentScroll = scrollContainerRef.current.scrollTop;
       scrollContainerRef.current.scrollTo({
-        left: currentScroll + 200,
+        top: currentScroll + 200,
         behavior: 'smooth',
       });
       setScrollPosition(currentScroll + 200);
@@ -146,24 +149,24 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const newScrollPosition = e.currentTarget.scrollLeft;
+    const newScrollPosition = e.currentTarget.scrollTop;
     setScrollPosition(newScrollPosition);
   };
 
-  const hasMoreLeft = scrollPosition > 0;
-  const hasMoreRight = scrollContainerRef.current
+  const hasMoreUp = scrollPosition > 0;
+  const hasMoreDown = scrollContainerRef.current
     ? scrollPosition <
-      scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth - 10
+      scrollContainerRef.current.scrollHeight - scrollContainerRef.current.clientHeight - 10
     : false;
 
   useEffect(() => {
     // 当图片列表变化时，检查是否有更多图片可滚动
     if (scrollContainerRef.current) {
       const hasMore =
-        scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth;
+        scrollContainerRef.current.scrollHeight > scrollContainerRef.current.clientHeight;
       if (!hasMore) {
         setScrollPosition(0);
-        scrollContainerRef.current.scrollTo({ left: 0 });
+        scrollContainerRef.current.scrollTo({ top: 0 });
       }
     }
   }, [images.length]);
@@ -171,8 +174,8 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
   return (
     <ThumbnailPanelContainer $isVisible={isVisible}>
       {images.length > 5 && (
-        <NavButton onClick={scrollLeft} disabled={!hasMoreLeft}>
-          <LeftOutlined />
+        <NavButton onClick={scrollUp} disabled={!hasMoreUp}>
+          <UpOutlined />
         </NavButton>
       )}
 
@@ -191,8 +194,8 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
       </ThumbnailsScrollContainer>
 
       {images.length > 5 && (
-        <NavButton onClick={scrollRight} disabled={!hasMoreRight}>
-          <RightOutlined />
+        <NavButton onClick={scrollDown} disabled={!hasMoreDown}>
+          <DownOutlined />
         </NavButton>
       )}
     </ThumbnailPanelContainer>
