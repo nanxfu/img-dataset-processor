@@ -226,14 +226,6 @@ const ImagePreview: React.FC = () => {
     );
   }, [cropRegion, scalingFactor, imageRef]);
 
-  const handleMouseUpEvent = useCallback(() => {
-    handleMouseUp();
-    if (imageRef?.current) {
-      const imageArea = imageRef.current.naturalWidth * imageRef.current.naturalHeight;
-      const cropRegionAreaPercentage = cropRegionArea / imageArea;
-    }
-  }, [handleMouseUp, cropRegionArea, imageRef]);
-
   const handleZoomIn = useCallback(() => {
     setScalingFactor(prev => Math.min(maxScalingFactor, prev + 0.2));
   }, []);
@@ -255,8 +247,8 @@ const ImagePreview: React.FC = () => {
                 draggable={false}
                 onMouseDown={isCropMode ? handleMouseDown : undefined}
                 onMouseMove={isCropMode ? handleMouseMove : undefined}
-                onMouseUp={isCropMode ? handleMouseUpEvent : undefined}
-                onMouseLeave={isCropMode ? handleMouseUpEvent : undefined}
+                onMouseUp={isCropMode ? handleMouseUp : undefined}
+                onMouseLeave={isCropMode ? handleMouseUp : undefined}
                 style={{
                   transform: `scale(${scalingFactor})`,
                   cursor: isCropMode ? 'crosshair' : 'default',

@@ -172,7 +172,7 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
   }, [images.length]);
 
   return (
-    <ThumbnailPanelContainer $isVisible={isVisible}>
+    <ThumbnailPanelContainer $isVisible={isVisible && images.length > 0}>
       {images.length > 5 && (
         <NavButton onClick={scrollUp} disabled={!hasMoreUp}>
           <UpOutlined />
