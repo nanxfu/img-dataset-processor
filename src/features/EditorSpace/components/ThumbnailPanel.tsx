@@ -21,7 +21,7 @@ const ThumbnailPanelContainer = styled.div<{ $isVisible: boolean }>`
   opacity: ${props => (props.$isVisible ? '1' : '0')};
   pointer-events: ${props => (props.$isVisible ? 'auto' : 'none')};
   z-index: 1000;
-  display: flex;
+  display: ${({ $isVisible }) => ($isVisible ? 'flex' : 'none')};
   flex-direction: column;
   align-items: center;
   gap: 8px;
@@ -87,6 +87,25 @@ const ThumbnailImage = styled.img<{ $isSelected: boolean }>`
     border-color: #ff69b4;
     z-index: 2; /* 悬停时增加z-index，确保显示在最上层 */
   }
+`;
+
+const ThumbnailContainer = styled.div`
+  position: relative;
+  width: 64px;
+  height: 64px;
+`;
+
+const ModifiedIndicator = styled.div`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ff69b4;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 3;
 `;
 
 const NavButton = styled.button`
@@ -182,13 +201,15 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
       <ThumbnailsScrollContainer ref={scrollContainerRef} onScroll={handleScroll}>
         <ThumbnailsWrapper>
           {images.map(image => (
-            <ThumbnailImage
-              key={image.id}
-              src={image.url}
-              alt={image.name}
-              $isSelected={selectedImage?.id === image.id}
-              onClick={() => selectImage(image.id)}
-            />
+            <ThumbnailContainer key={image.id}>
+              <ThumbnailImage
+                src={image.url}
+                alt={image.name}
+                $isSelected={selectedImage?.id === image.id}
+                onClick={() => selectImage(image.id)}
+              />
+              {image.isModified && <ModifiedIndicator title="已修改" />}
+            </ThumbnailContainer>
           ))}
         </ThumbnailsWrapper>
       </ThumbnailsScrollContainer>

@@ -56,6 +56,7 @@ export const useImageSize = () => {
         imgElement.removeEventListener('load', handleLoad);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedImage]);
 
   return { naturalSize, displaySize };

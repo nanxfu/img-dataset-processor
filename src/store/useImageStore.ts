@@ -5,6 +5,13 @@ export interface Image {
   id: string;
   url: string;
   name: string;
+  isModified?: boolean;
+  cropRegion?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
 }
 
 interface ImageState {
@@ -16,6 +23,10 @@ interface ImageState {
   selectImage: (id: string) => void;
   clearImages: () => void;
   setCropMode: (isCropMode: boolean) => void;
+  applyImageCrop: (
+    imageId: string,
+    cropRegion: { top: number; right: number; bottom: number; left: number }
+  ) => void;
 }
 
 export const useImageStore = create<ImageState>()(
@@ -39,5 +50,15 @@ export const useImageStore = create<ImageState>()(
       })),
     clearImages: () => set({ images: [], selectedImage: null }),
     setCropMode: isCropMode => set({ isCropMode }),
+    applyImageCrop: (imageId, cropRegion) =>
+      set(state => ({
+        images: state.images.map(img =>
+          img.id === imageId ? { ...img, cropRegion, isModified: true } : img
+        ),
+        selectedImage:
+          state.selectedImage?.id === imageId
+            ? { ...state.selectedImage, cropRegion, isModified: true }
+            : state.selectedImage,
+      })),
   }))
 );
