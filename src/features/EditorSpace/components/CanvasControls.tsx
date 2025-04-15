@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { styled } from 'styled-components';
 
+import ActionButton from '../../../components/ActionButton';
 import { useImageSize } from '../../../hooks/useImageContextHooks';
 import { useImageStore } from '../../../store/useImageStore';
 
@@ -187,6 +188,9 @@ const CanvasControls: React.FC = () => {
           <ScaleButton>拉伸</ScaleButton>
           <ScaleButton>按比例</ScaleButton>
         </ScaleGroup>
+      </div>
+      <div>
+        <ActionButton>应用裁剪</ActionButton>
       </div>
     </CanvasControlsPanel>
   );

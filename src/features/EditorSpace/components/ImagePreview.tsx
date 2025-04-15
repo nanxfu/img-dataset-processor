@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 import { styled } from 'styled-components';
 
+import ActionButton from '../../../components/ActionButton';
 import { useCropImage } from '../../../hooks/useCropImage';
 import { useCropRegionDrawer } from '../../../hooks/useCropRegionDrawer';
 import { useImageRef } from '../../../hooks/useImageContextHooks';
@@ -206,38 +207,6 @@ const ModifiedTag = styled.div`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 `;
 
-const ActionButton = styled.button`
-  /* 布局属性 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  /* 盒模型属性 */
-  padding: 6px 12px;
-  margin-left: 8px;
-  border: none;
-  border-radius: 4px;
-
-  /* 视觉属性 */
-  background-color: #ff69b4;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-
-  /* 动画属性 */
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    background-color: #ff5ba7;
-    transform: translateY(-1px);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
 const maxScalingFactor = 2;
 const minScalingFactor = 1;
 
@@ -343,7 +312,11 @@ const ImagePreview: React.FC = () => {
               {isCropMode && (
                 <>
                   <ActionButton onClick={handleApplyCrop}>应用裁剪</ActionButton>
-                  <ActionButton onClick={exportCroppedImage} style={{ backgroundColor: '#4a90e2' }}>
+                  <ActionButton
+                    onClick={exportCroppedImage}
+                    backgroundColor="#4a90e2"
+                    hoverBackgroundColor="#357abd"
+                  >
                     导出裁剪图片
                   </ActionButton>
                 </>
