@@ -155,8 +155,6 @@ const PreviewImage = styled.img`
   max-width: 100%;
   max-height: 100%;
 
-  /* 视觉属性 */
-  filter: brightness(0.5);
   object-fit: contain;
 
   /* 交互属性 */
@@ -189,6 +187,57 @@ const CropRegionPreview = styled.img<{ $isDrawing: boolean }>`
   will-change: transform, clip-path;
 `;
 
+const ModifiedTag = styled.div`
+  /* 布局属性 */
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+
+  /* 盒模型属性 */
+  padding: 4px 8px;
+  border-radius: 4px;
+
+  /* 视觉属性 */
+  background-color: rgba(255, 105, 180, 0.8);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+`;
+
+const ActionButton = styled.button`
+  /* 布局属性 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 盒模型属性 */
+  padding: 6px 12px;
+  margin-left: 8px;
+  border: none;
+  border-radius: 4px;
+
+  /* 视觉属性 */
+  background-color: #ff69b4;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+
+  /* 动画属性 */
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #ff5ba7;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 const maxScalingFactor = 2;
 const minScalingFactor = 1;
 
@@ -196,6 +245,7 @@ const ImagePreview: React.FC = () => {
   const images = useImageStore(state => state.images);
   const selectedImage = useImageStore(state => state.selectedImage);
   const isCropMode = useImageStore(state => state.isCropMode);
+  const applyImageCrop = useImageStore(state => state.applyImageCrop);
   const { imageRef } = useImageRef();
   const [scalingFactor, setScalingFactor] = useState(1);
 
@@ -226,6 +276,14 @@ const ImagePreview: React.FC = () => {
     );
   }, [cropRegion, scalingFactor, imageRef]);
 
+  const handleMouseUpEvent = useCallback(() => {
+    handleMouseUp();
+    if (imageRef?.current) {
+      const imageArea = imageRef.current.naturalWidth * imageRef.current.naturalHeight;
+      const cropRegionAreaPercentage = cropRegionArea / imageArea;
+    }
+  }, [handleMouseUp, cropRegionArea, imageRef]);
+
   const handleZoomIn = useCallback(() => {
     setScalingFactor(prev => Math.min(maxScalingFactor, prev + 0.2));
   }, []);
@@ -234,12 +292,20 @@ const ImagePreview: React.FC = () => {
     setScalingFactor(prev => Math.max(minScalingFactor, prev - 0.2));
   }, []);
 
+  const handleApplyCrop = useCallback(() => {
+    if (selectedImage) {
+      applyImageCrop(selectedImage.id, cropRegion);
+      useImageStore.getState().setCropMode(false);
+    }
+  }, [selectedImage, cropRegion, applyImageCrop]);
+
   return (
     <CanvasControlsPanel>
       <OperationArea>
         <OutlineArea>
           {selectedImage && (
             <React.Fragment>
+              {selectedImage.isModified && <ModifiedTag>已修改</ModifiedTag>}
               <PreviewImage
                 ref={imageRef}
                 src={selectedImage.url}
@@ -247,11 +313,12 @@ const ImagePreview: React.FC = () => {
                 draggable={false}
                 onMouseDown={isCropMode ? handleMouseDown : undefined}
                 onMouseMove={isCropMode ? handleMouseMove : undefined}
-                onMouseUp={isCropMode ? handleMouseUp : undefined}
-                onMouseLeave={isCropMode ? handleMouseUp : undefined}
+                onMouseUp={isCropMode ? handleMouseUpEvent : undefined}
+                onMouseLeave={isCropMode ? handleMouseUpEvent : undefined}
                 style={{
                   transform: `scale(${scalingFactor})`,
                   cursor: isCropMode ? 'crosshair' : 'default',
+                  filter: isCropMode ? 'brightness(0.5)' : 'none',
                 }}
               />
               {isCropMode && (
@@ -271,23 +338,15 @@ const ImagePreview: React.FC = () => {
             </React.Fragment>
           )}
           <MetadataPanel>
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               <span>800 × 600px | 2.3MB</span>
               {isCropMode && (
-                <button
-                  onClick={exportCroppedImage}
-                  style={{
-                    marginLeft: '16px',
-                    padding: '4px 8px',
-                    backgroundColor: '#ff69b4',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  导出裁剪图片
-                </button>
+                <>
+                  <ActionButton onClick={handleApplyCrop}>应用裁剪</ActionButton>
+                  <ActionButton onClick={exportCroppedImage} style={{ backgroundColor: '#4a90e2' }}>
+                    导出裁剪图片
+                  </ActionButton>
+                </>
               )}
             </div>
           </MetadataPanel>
