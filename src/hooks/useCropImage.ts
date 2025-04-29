@@ -27,6 +27,7 @@ export const useCropImage = ({
 }: UseCropImageProps) => {
   const calculateScalingFactor = useCallback(() => {
     if (!imageRef.current) return 1;
+
     const { naturalWidth, naturalHeight } = imageRef.current;
     const { clientWidth, clientHeight } = imageRef.current;
     return Math.min(clientWidth / naturalWidth, clientHeight / naturalHeight);
@@ -77,6 +78,7 @@ export const useCropImage = ({
         resolve({ blob, url, width, height });
       }, 'image/png');
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     calculateScalingFactor,
     cropRegion.bottom,
