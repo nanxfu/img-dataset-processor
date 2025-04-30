@@ -38,6 +38,7 @@ export const useImageStore = create<ImageState>()(
       set(state => ({
         images: [...state.images, image],
         selectedImage: image,
+        isCropMode: true,
       })),
     removeImage: id =>
       set(state => ({
