@@ -8,7 +8,7 @@ interface CropRegion {
 }
 
 interface UseCropImageProps {
-  imageRef: React.RefObject<HTMLImageElement>;
+  imageNode: HTMLImageElement;
   cropRegion: CropRegion;
   displayName?: string;
 }
@@ -21,20 +21,20 @@ interface CroppedImageResult {
 }
 
 export const useCropImage = ({
-  imageRef,
+  imageNode,
   cropRegion,
   displayName = 'cropped_image',
 }: UseCropImageProps) => {
   const calculateScalingFactor = useCallback(() => {
-    if (!imageRef.current) return 1;
+    if (!imageNode) return 1;
 
-    const { naturalWidth, naturalHeight } = imageRef.current;
-    const { clientWidth, clientHeight } = imageRef.current;
+    const { naturalWidth, naturalHeight } = imageNode;
+    const { clientWidth, clientHeight } = imageNode;
     return Math.min(clientWidth / naturalWidth, clientHeight / naturalHeight);
-  }, []);
+  }, [imageNode]);
 
   const getCroppedImage = useCallback(async (): Promise<CroppedImageResult> => {
-    if (!imageRef.current) {
+    if (!imageNode) {
       return { blob: null, url: null, width: 0, height: 0 };
     }
 
@@ -47,16 +47,14 @@ export const useCropImage = ({
     const scalingFactor = calculateScalingFactor();
 
     // 设置画布尺寸为裁剪区域大小
-    const width =
-      (imageRef.current.clientWidth - cropRegion.left - cropRegion.right) / scalingFactor;
-    const height =
-      (imageRef.current.clientHeight - cropRegion.top - cropRegion.bottom) / scalingFactor;
+    const width = (imageNode.clientWidth - cropRegion.left - cropRegion.right) / scalingFactor;
+    const height = (imageNode.clientHeight - cropRegion.top - cropRegion.bottom) / scalingFactor;
     canvas.width = width;
     canvas.height = height;
 
     // 绘制裁剪后的图片
     ctx.drawImage(
-      imageRef.current,
+      imageNode,
       cropRegion.left / scalingFactor,
       cropRegion.top / scalingFactor,
       width,

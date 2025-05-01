@@ -1,8 +1,8 @@
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { styled } from 'styled-components';
 
-import { useImageStore } from '../../../store/useImageStore';
+import { Image, useImageStore } from '../../../store/useImageStore';
 
 const ThumbnailPanelContainer = styled.div<{ $isVisible: boolean }>`
   position: absolute;
@@ -70,44 +70,6 @@ const ThumbnailsWrapper = styled.div`
   align-items: center;
 `;
 
-const ThumbnailImage = styled.img<{ $isSelected: boolean }>`
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  border: 2px solid ${props => (props.$isSelected ? '#ff69b4' : '#ccc')};
-  object-fit: cover;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  flex-shrink: 0;
-  position: relative; /* 添加定位，使悬停效果能够突破容器限制 */
-  z-index: 1; /* 让悬停的图片位于顶层 */
-
-  &:hover {
-    transform: scale(1.05);
-    border-color: #ff69b4;
-    z-index: 2; /* 悬停时增加z-index，确保显示在最上层 */
-  }
-`;
-
-const ThumbnailContainer = styled.div`
-  position: relative;
-  width: 64px;
-  height: 64px;
-`;
-
-const ModifiedIndicator = styled.div`
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #ff69b4;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  z-index: 3;
-`;
-
 const NavButton = styled.button`
   display: flex;
   align-items: center;
@@ -133,6 +95,89 @@ const NavButton = styled.button`
     cursor: not-allowed;
   }
 `;
+
+const ThumbnailItemContainer = styled.div`
+  position: relative;
+  width: 64px;
+  height: 64px;
+`;
+
+const ThumbnailItemImage = styled.img<{ $isSelected: boolean }>`
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  border: 2px solid ${props => (props.$isSelected ? '#ff69b4' : '#ccc')};
+  object-fit: cover;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    transform: scale(1.05);
+    border-color: #ff69b4;
+    z-index: 2;
+  }
+`;
+
+const ThumbnailModifiedIndicator = styled.div`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ff69b4;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 3;
+`;
+
+interface ThumbnailItemProps {
+  image: Image;
+  isSelected: boolean;
+  onClick: (id: string) => void;
+}
+
+const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ image, isSelected, onClick }) => {
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let objectUrl: string | undefined;
+    if (image.file) {
+      objectUrl = URL.createObjectURL(image.file);
+      setImageUrl(objectUrl);
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      // 清除状态以防万一，尽管组件卸载时理论上不需要
+      setImageUrl(undefined);
+    };
+  }, [image.file]); // 依赖 image.file
+
+  // 如果没有 URL，不渲染任何内容或显示占位符
+  if (!imageUrl) {
+    // 可以选择渲染一个加载指示器或占位符
+    return;
+  }
+
+  return (
+    <ThumbnailItemContainer key={image.id}>
+      <ThumbnailItemImage
+        src={imageUrl}
+        alt={image.name}
+        $isSelected={isSelected}
+        onClick={() => onClick(image.id)}
+        loading="lazy" // 添加懒加载
+      />
+      {image.isModified && <ThumbnailModifiedIndicator title="已修改" />}
+    </ThumbnailItemContainer>
+  );
+};
 
 interface ThumbnailPanelProps {
   isVisible: boolean;
@@ -201,15 +246,12 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
       <ThumbnailsScrollContainer ref={scrollContainerRef} onScroll={handleScroll}>
         <ThumbnailsWrapper>
           {images.map(image => (
-            <ThumbnailContainer key={image.id}>
-              <ThumbnailImage
-                src={image.url}
-                alt={image.name}
-                $isSelected={selectedImage?.id === image.id}
-                onClick={() => selectImage(image.id)}
-              />
-              {image.isModified && <ModifiedIndicator title="已修改" />}
-            </ThumbnailContainer>
+            <ThumbnailItem
+              key={image.id}
+              image={image}
+              isSelected={selectedImage?.id === image.id}
+              onClick={selectImage}
+            />
           ))}
         </ThumbnailsWrapper>
       </ThumbnailsScrollContainer>

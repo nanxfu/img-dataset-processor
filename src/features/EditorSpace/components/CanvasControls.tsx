@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { styled } from 'styled-components';
 
 import ActionButton from '../../../components/ActionButton';
-import { useImageSize } from '../../../hooks/useImageContextHooks';
 import { useImageStore } from '../../../store/useImageStore';
+import resizeImage from '../../../utils/resizeImage';
 
 const CanvasControlsPanel = styled.div<{ $isVisible: boolean }>`
   display: ${props => (props.$isVisible ? 'flex' : 'none')};
@@ -97,7 +97,7 @@ const ScaleButton = styled(PresetButton)``;
 const CanvasControls: React.FC = () => {
   const isCropMode = useImageStore(state => state.isCropMode);
   const selectedImage = useImageStore(state => state.selectedImage);
-  const { naturalSize } = useImageSize();
+  const naturalSize = useImageStore(state => state.naturalSize);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
 
@@ -107,7 +107,7 @@ const CanvasControls: React.FC = () => {
       setWidth(naturalSize.width);
       setHeight(naturalSize.height);
     }
-  }, [naturalSize]);
+  }, [naturalSize, selectedImage]);
 
   // 处理尺寸变化
   const handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,6 +130,22 @@ const CanvasControls: React.FC = () => {
     }
   };
 
+  const handleSaveImage = async () => {
+    if (!selectedImage?.file) return;
+
+    const result = await resizeImage({
+      imageSource: selectedImage.file,
+      resizedWidth: width,
+      resizedHeight: height,
+    });
+
+    if (!result?.resizedImage) return;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(result.resizedImage as Blob);
+    a.download = `images.jpg`;
+    a.click();
+  };
   // 处理预设比例点击
   const handlePresetRatio = (ratio: string) => {
     switch (ratio) {
@@ -190,7 +206,7 @@ const CanvasControls: React.FC = () => {
         </ScaleGroup>
       </div>
       <div>
-        <ActionButton>应用裁剪</ActionButton>
+        <ActionButton onClick={handleSaveImage}>保存图片</ActionButton>
       </div>
     </CanvasControlsPanel>
   );

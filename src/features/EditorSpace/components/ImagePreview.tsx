@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import React from 'react';
 import { styled } from 'styled-components';
 
 import ActionButton from '../../../components/ActionButton';
 import { useCropImage } from '../../../hooks/useCropImage';
 import { useCropRegionDrawer } from '../../../hooks/useCropRegionDrawer';
-import { useImageRef } from '../../../hooks/useImageContextHooks';
+import { useImageObserver } from '../../../hooks/useImageObserver';
 import { useImageStore } from '../../../store/useImageStore';
 
 import ThumbnailPanel from './ThumbnailPanel';
@@ -215,18 +215,22 @@ const ImagePreview: React.FC = () => {
   const selectedImage = useImageStore(state => state.selectedImage);
   const isCropMode = useImageStore(state => state.isCropMode);
   const applyImageCrop = useImageStore(state => state.applyImageCrop);
-  const { imageRef } = useImageRef();
+  const displaySize = useImageStore(state => state.displaySize);
+  const naturalSize = useImageStore(state => state.naturalSize);
   const [scalingFactor, setScalingFactor] = useState(1);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+
+  const { measuredRef, imgNode } = useImageObserver();
 
   const { cropRegion, isDrawing, handleMouseDown, handleMouseMove, handleMouseUp } =
     useCropRegionDrawer({
-      imageRef,
+      imageNode: imgNode,
       initialRegion: isCropMode ? { top: 200, right: 200, bottom: 200, left: 200 } : undefined,
       scalingFactor,
     });
 
   const { exportCroppedImage } = useCropImage({
-    imageRef,
+    imageNode: imgNode,
     cropRegion,
     displayName: selectedImage ? `cropped_${selectedImage.name}` : 'cropped_image',
   });
@@ -237,21 +241,29 @@ const ImagePreview: React.FC = () => {
     }
   }, [images, selectedImage]);
 
-  const cropRegionArea = useMemo(() => {
-    if (!imageRef?.current) return 0;
-    return (
-      (imageRef.current.clientWidth / scalingFactor - cropRegion.left - cropRegion.right) *
-      (imageRef.current.clientHeight / scalingFactor - cropRegion.top - cropRegion.bottom)
-    );
-  }, [cropRegion, scalingFactor, imageRef]);
+  useEffect(() => {
+    let objectUrl: string | undefined;
+    if (selectedImage?.file) {
+      objectUrl = URL.createObjectURL(selectedImage.file);
+      setImageUrl(objectUrl);
+    } else {
+      setImageUrl(undefined);
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        setImageUrl(undefined);
+      }
+    };
+  }, [selectedImage]);
 
   const handleMouseUpEvent = useCallback(() => {
     handleMouseUp();
-    if (imageRef?.current) {
-      const imageArea = imageRef.current.naturalWidth * imageRef.current.naturalHeight;
-      const cropRegionAreaPercentage = cropRegionArea / imageArea;
+    if (imgNode && naturalSize.width > 0 && naturalSize.height > 0) {
+      const imageArea = naturalSize.width * naturalSize.height;
     }
-  }, [handleMouseUp, cropRegionArea, imageRef]);
+  }, [handleMouseUp, imgNode, naturalSize]);
 
   const handleZoomIn = useCallback(() => {
     setScalingFactor(prev => Math.min(maxScalingFactor, prev + 0.2));
@@ -272,12 +284,12 @@ const ImagePreview: React.FC = () => {
     <CanvasControlsPanel>
       <OperationArea>
         <OutlineArea>
-          {selectedImage && (
+          {selectedImage && imageUrl && (
             <React.Fragment>
               {selectedImage.isModified && <ModifiedTag>已修改</ModifiedTag>}
               <PreviewImage
-                ref={imageRef}
-                src={selectedImage.url}
+                ref={measuredRef}
+                src={imageUrl}
                 alt={selectedImage.name}
                 draggable={false}
                 onMouseDown={isCropMode ? handleMouseDown : undefined}
@@ -293,14 +305,14 @@ const ImagePreview: React.FC = () => {
               {isCropMode && (
                 <CropRegionPreview
                   draggable={false}
-                  src={selectedImage.url}
+                  src={imageUrl}
                   alt={selectedImage.name}
                   $isDrawing={isDrawing}
                   style={{
                     transform: `scale(${scalingFactor})`,
-                    clipPath: `inset(${cropRegion.top}px ${
-                      cropRegion.right
-                    }px ${cropRegion.bottom}px ${cropRegion.left}px)`,
+                    clipPath: `inset(${cropRegion.top}px ${cropRegion.right}px ${
+                      cropRegion.bottom
+                    }px ${cropRegion.left}px)`,
                   }}
                 />
               )}
@@ -308,7 +320,12 @@ const ImagePreview: React.FC = () => {
           )}
           <MetadataPanel>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span>800 × 600px | 2.3MB</span>
+              {selectedImage && (
+                <span>
+                  {selectedImage.name} | {selectedImage.file?.type}| Natural: {naturalSize.width}x
+                  {naturalSize.height}| Display: {displaySize.width}x{displaySize.height}
+                </span>
+              )}
               {isCropMode && (
                 <>
                   <ActionButton onClick={handleApplyCrop}>应用裁剪</ActionButton>
@@ -323,7 +340,7 @@ const ImagePreview: React.FC = () => {
               )}
             </div>
           </MetadataPanel>
-          {selectedImage && (
+          {selectedImage && imageUrl && (
             <ZoomControls>
               <ZoomButton
                 onClick={handleZoomIn}

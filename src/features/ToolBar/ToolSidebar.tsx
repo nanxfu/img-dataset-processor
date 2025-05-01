@@ -105,7 +105,7 @@ const ToolSidebar: React.FC = () => {
       const file = info.file.originFileObj as RcFile;
       const newImage = {
         id: Math.random().toString(36).substring(7),
-        url: URL.createObjectURL(file),
+        file,
         name: file.name,
       };
       addImage(newImage);

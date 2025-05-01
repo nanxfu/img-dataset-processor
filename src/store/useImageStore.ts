@@ -3,7 +3,7 @@ import { devtools } from 'zustand/middleware';
 
 export interface Image {
   id: string;
-  url: string;
+  file: File;
   name: string;
   isModified?: boolean;
   cropRegion?: {
@@ -27,6 +27,10 @@ interface ImageState {
     imageId: string,
     cropRegion: { top: number; right: number; bottom: number; left: number }
   ) => void;
+  naturalSize: { width: number; height: number };
+  displaySize: { width: number; height: number };
+  setNaturalSize: (width: number, height: number) => void;
+  setDisplaySize: (width: number, height: number) => void;
 }
 
 export const useImageStore = create<ImageState>()(
@@ -34,6 +38,8 @@ export const useImageStore = create<ImageState>()(
     images: [],
     selectedImage: null,
     isCropMode: false,
+    naturalSize: { width: 0, height: 0 },
+    displaySize: { width: 0, height: 0 },
     addImage: image =>
       set(state => ({
         images: [...state.images, image],
@@ -61,5 +67,7 @@ export const useImageStore = create<ImageState>()(
             ? { ...state.selectedImage, cropRegion, isModified: true }
             : state.selectedImage,
       })),
+    setNaturalSize: (width: number, height: number) => set({ naturalSize: { width, height } }),
+    setDisplaySize: (width: number, height: number) => set({ displaySize: { width, height } }),
   }))
 );
