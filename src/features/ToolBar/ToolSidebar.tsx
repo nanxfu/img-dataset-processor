@@ -133,6 +133,14 @@ const ToolSidebar: React.FC = () => {
       },
       isActive: false,
     },
+    {
+      id: 'removeWatermark',
+      label: '去除水印',
+      onClick: () => {
+        // 处理去除水印
+      },
+      isActive: false,
+    },
   ];
 
   const advancedSettingsTools = [

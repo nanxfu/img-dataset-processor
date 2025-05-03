@@ -21,6 +21,7 @@ const StyledButton = styled.button<{
   justify-content: center;
 
   /* 盒模型属性 */
+  flex: 1;
   padding: 6px 12px;
   margin-left: 8px;
   border: none;

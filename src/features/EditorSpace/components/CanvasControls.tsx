@@ -74,12 +74,14 @@ const PresetGroup = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{ active?: boolean }>`
+const PresetButton = styled.button<{ $isActive?: boolean }>`
+  width: 124px;
+  height: 52px;
   padding: 6px 12px;
   border-radius: 16px;
-  border: 1px solid ${props => (props.active ? '#1890ff' : '#e0e0e0')};
-  background-color: ${props => (props.active ? '#e6f7ff' : '#fff')};
-  color: ${props => (props.active ? '#1890ff' : '#666')};
+  border: 1px solid ${props => (props.$isActive ? '#1890ff' : '#e0e0e0')};
+  background: #f9fafb;
+  color: ${props => (props.$isActive ? '#1890ff' : '#666')};
   cursor: pointer;
   font-size: 14px;
   &:hover {
@@ -98,8 +100,10 @@ const CanvasControls: React.FC = () => {
   const isCropMode = useImageStore(state => state.isCropMode);
   const selectedImage = useImageStore(state => state.selectedImage);
   const naturalSize = useImageStore(state => state.naturalSize);
+  const updateImageFile = useImageStore(state => state.updateImageFile);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+  const [scaleMethod, setScaleMethod] = useState<'stretch' | 'proportion'>('stretch');
 
   useEffect(() => {
     if (selectedImage && naturalSize.width > 0 && naturalSize.height > 0) {
@@ -115,6 +119,9 @@ const CanvasControls: React.FC = () => {
     if (!isNaN(newWidth)) {
       setWidth(newWidth);
       // 可以在这里添加应用尺寸变化的逻辑
+      if (scaleMethod === 'proportion') {
+        setHeight(Math.round((newWidth * naturalSize.height) / naturalSize.width));
+      }
     } else if (event.target.value === '') {
       setWidth(0); // 或者根据需要处理空输入
     }
@@ -125,11 +132,30 @@ const CanvasControls: React.FC = () => {
     if (!isNaN(newHeight)) {
       setHeight(newHeight);
       // 可以在这里添加应用尺寸变化的逻辑
+      if (scaleMethod === 'proportion') {
+        setWidth(Math.round((newHeight * naturalSize.width) / naturalSize.height));
+      }
     } else if (event.target.value === '') {
       setHeight(0); // 或者根据需要处理空输入
     }
   };
+  const handleApplyImageSettings = async () => {
+    if (!selectedImage?.file) return;
 
+    const result = await resizeImage({
+      imageSource: selectedImage.file,
+      resizedWidth: width,
+      resizedHeight: height,
+    });
+
+    if (!result?.resizedImage) return;
+
+    const newFile = new File([result.resizedImage], selectedImage.name, {
+      type: selectedImage.file.type,
+    });
+
+    updateImageFile(selectedImage.id, newFile);
+  };
   const handleSaveImage = async () => {
     if (!selectedImage?.file) return;
 
@@ -201,12 +227,24 @@ const CanvasControls: React.FC = () => {
       <div>
         <SectionTitle>缩放方式</SectionTitle>
         <ScaleGroup>
-          <ScaleButton>拉伸</ScaleButton>
-          <ScaleButton>按比例</ScaleButton>
+          <ScaleButton
+            onClick={() => setScaleMethod('stretch')}
+            $isActive={scaleMethod === 'stretch'}
+          >
+            拉伸
+          </ScaleButton>
+          <ScaleButton
+            onClick={() => setScaleMethod('proportion')}
+            $isActive={scaleMethod === 'proportion'}
+          >
+            按比例
+          </ScaleButton>
         </ScaleGroup>
       </div>
-      <div>
-        <ActionButton onClick={handleSaveImage}>保存图片</ActionButton>
+
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <ActionButton onClick={handleApplyImageSettings}>确认更改</ActionButton>
+        <ActionButton onClick={handleSaveImage}>导出图片</ActionButton>
       </div>
     </CanvasControlsPanel>
   );

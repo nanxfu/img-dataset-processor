@@ -224,13 +224,13 @@ const ImagePreview: React.FC = () => {
 
   const { cropRegion, isDrawing, handleMouseDown, handleMouseMove, handleMouseUp } =
     useCropRegionDrawer({
-      imageNode: imgNode,
+      imageNode: imgNode as HTMLImageElement,
       initialRegion: isCropMode ? { top: 200, right: 200, bottom: 200, left: 200 } : undefined,
       scalingFactor,
     });
 
   const { exportCroppedImage } = useCropImage({
-    imageNode: imgNode,
+    imageNode: imgNode as HTMLImageElement,
     cropRegion,
     displayName: selectedImage ? `cropped_${selectedImage.name}` : 'cropped_image',
   });
@@ -256,7 +256,7 @@ const ImagePreview: React.FC = () => {
         setImageUrl(undefined);
       }
     };
-  }, [selectedImage]);
+  }, [selectedImage?.file]);
 
   const handleMouseUpEvent = useCallback(() => {
     handleMouseUp();

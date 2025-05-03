@@ -47,9 +47,11 @@ const PanelContent = styled.div`
   gap: 12px;
 
   /* 盒模型属性 */
+  max-height: 200px;
   padding: 16px 20px;
 
   /* 视觉属性 */
+  overflow-y: auto;
   background-color: #ffffff;
 `;
 

@@ -14,7 +14,7 @@ export interface CropRegion {
 }
 
 export interface UseCropRegionDrawerProps {
-  imageNode?: HTMLImageElement;
+  imageNode: HTMLImageElement;
   initialRegion?: CropRegion;
   scalingFactor: number;
 }

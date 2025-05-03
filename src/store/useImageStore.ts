@@ -21,6 +21,7 @@ interface ImageState {
   addImage: (image: Image) => void;
   removeImage: (id: string) => void;
   selectImage: (id: string) => void;
+  updateImageFile: (id: string, newFile: File) => void;
   clearImages: () => void;
   setCropMode: (isCropMode: boolean) => void;
   applyImageCrop: (
@@ -54,6 +55,16 @@ export const useImageStore = create<ImageState>()(
     selectImage: id =>
       set(state => ({
         selectedImage: state.images.find(img => img.id === id) || null,
+      })),
+    updateImageFile: (id, newFile) =>
+      set(state => ({
+        images: state.images.map(img =>
+          img.id === id ? { ...img, file: newFile, isModified: true } : img
+        ),
+        selectedImage:
+          state.selectedImage?.id === id
+            ? { ...state.selectedImage, file: newFile, isModified: true }
+            : state.selectedImage,
       })),
     clearImages: () => set({ images: [], selectedImage: null }),
     setCropMode: isCropMode => set({ isCropMode }),
