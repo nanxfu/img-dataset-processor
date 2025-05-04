@@ -1,9 +1,12 @@
+import { Tensor } from 'onnxruntime-web';
 import { useEffect, useState } from 'react';
 import { styled } from 'styled-components';
 
 import ActionButton from '../../../components/ActionButton';
 import { useImageStore } from '../../../store/useImageStore';
 import resizeImage from '../../../utils/resizeImage';
+import { loadModel } from '../../AiProcessing/services/aiModelRegistry';
+import { imageToTensor } from '../../AiProcessing/services/imageHelper';
 
 const CanvasControlsPanel = styled.div<{ $isVisible: boolean }>`
   display: ${props => (props.$isVisible ? 'flex' : 'none')};
@@ -156,6 +159,23 @@ const CanvasControls: React.FC = () => {
 
     updateImageFile(selectedImage.id, newFile);
   };
+
+  const handleAiProcessing = async () => {
+    if (!selectedImage?.file) return;
+    //加载模型
+    const model = await loadModel('imageClassification', '/models/squeezenet1.1-7.onnx');
+    if (!model) return;
+    // 使用模型进行推理
+    const inputTensor = await imageToTensor(selectedImage.file);
+    const feeds: Record<string, Tensor> = {};
+    feeds[model.inputNames[0]] = inputTensor;
+    const outputData = await model.run(feeds);
+    const output = outputData[model.outputNames[0]];
+    //Get the softmax of the output data. The softmax transforms values to be between 0 and 1
+    const outputSoftmax = softmax(Array.prototype.slice.call(output.data));
+    console.log('outputData', outputData, outputSoftmax);
+  };
+
   const handleSaveImage = async () => {
     if (!selectedImage?.file) return;
 
@@ -246,8 +266,17 @@ const CanvasControls: React.FC = () => {
         <ActionButton onClick={handleApplyImageSettings}>确认更改</ActionButton>
         <ActionButton onClick={handleSaveImage}>导出图片</ActionButton>
       </div>
+      <div>
+        <ActionButton onClick={handleAiProcessing}>AI图片分类</ActionButton>
+      </div>
     </CanvasControlsPanel>
   );
 };
 
 export default CanvasControls;
+function softmax(arg0: any[]) {
+  const max = Math.max(...arg0);
+  const exp = arg0.map(value => Math.exp(value - max));
+  const sum = exp.reduce((a, b) => a + b, 0);
+  return exp.map(value => value / sum);
+}
