@@ -6,7 +6,7 @@ import ActionButton from '../../../components/ActionButton';
 import { useImageStore } from '../../../store/useImageStore';
 import resizeImage from '../../../utils/resizeImage';
 import { loadModel } from '../../AiProcessing/services/aiModelRegistry';
-import { imageToTensor } from '../../AiProcessing/services/imageHelper';
+import { imageToTensor, upscaleImageWithPatches } from '../../AiProcessing/services/imageHelper';
 
 const CanvasControlsPanel = styled.div<{ $isVisible: boolean }>`
   display: ${props => (props.$isVisible ? 'flex' : 'none')};
@@ -212,6 +212,23 @@ const CanvasControls: React.FC = () => {
     }
   };
 
+  const handleUpscaleImage = async () => {
+    if (!selectedImage?.file) return;
+    const upscaledImage = await upscaleImageWithPatches(selectedImage.file, loadModel);
+    console.log('upscaledImage', upscaledImage);
+    const canvas = document.createElement('canvas');
+    canvas.width = upscaledImage.width;
+    canvas.height = upscaledImage.height;
+    const img = await createImageBitmap(upscaledImage);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0, upscaledImage.width, upscaledImage.height);
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/jpeg');
+    a.download = `upscaledImage.jpg`;
+    a.click();
+  };
+
   return (
     <CanvasControlsPanel $isVisible={isCropMode}>
       <div>
@@ -268,6 +285,9 @@ const CanvasControls: React.FC = () => {
       </div>
       <div>
         <ActionButton onClick={handleAiProcessing}>AI图片分类</ActionButton>
+      </div>
+      <div>
+        <ActionButton onClick={handleUpscaleImage}>AI图片放大</ActionButton>
       </div>
     </CanvasControlsPanel>
   );

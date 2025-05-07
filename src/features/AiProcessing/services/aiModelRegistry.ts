@@ -13,7 +13,9 @@ export async function loadModel(key: string, modelUrl: string): Promise<ort.Infe
     return sessions[key];
   }
   // 创建 InferenceSession，默认使用 wasm 后端
-  const session = await ort.InferenceSession.create(modelUrl, { executionProviders: ['wasm'] });
+  const session = await ort.InferenceSession.create(modelUrl, {
+    executionProviders: ['webgl', 'wasm'],
+  });
   sessions[key] = session;
   return session;
 }
