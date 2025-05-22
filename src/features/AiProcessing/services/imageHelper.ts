@@ -1,4 +1,4 @@
-import { Tensor } from 'onnxruntime-web';
+import { Tensor } from 'onnxruntime-web/webgpu';
 /**
  * 将图片转换为tensor
  * @param imageSource 图片源，可以是File、Blob、HTMLImageElement或ImageData
@@ -70,7 +70,6 @@ export const imageToTensor = async (
 
     // 创建tensor，使用目标尺寸
     // 注意：tensor的形状是 [1, channels, height, width]
-    // 模型期望输入类型为 float16
     const tensor = new Tensor('float32', float32Data, [1, 3, targetHeight, targetWidth]);
 
     return tensor;
@@ -223,25 +222,31 @@ const loadImageFromFile = (file: File): Promise<HTMLImageElement> => {
  */
 export const upscaleImageWithPatches = async (
   imageSource: File | HTMLImageElement | ImageData,
-  loadModelFn: (modelIdentifier: string, modelPath: string) => Promise<any> // 假设 `any` 是加载后的模型类型
+  loadModelFn: (modelIdentifier: string, modelPath: string) => Promise<any>
 ): Promise<ImageData> => {
+  console.log('🚀 开始图像放大处理...');
+  console.time('⏱️ 总处理时间');
+
   const MODEL_PATH = '/models/4xNomos2.onnx';
   const INPUT_PATCH_WIDTH = 256;
   const INPUT_PATCH_HEIGHT = 256;
   const UPSCALE_FACTOR = 4;
-  const OVERLAP = 32; // 输入图像块之间的重叠像素
+  const OVERLAP = 32;
 
-  console.log('Loading super-resolution model...');
+  console.time('⏱️ 模型加载时间');
+  console.log('📦 正在加载超分辨率模型...');
   const model = await loadModelFn('imageSuperResolution', MODEL_PATH);
   if (!model || !model.inputNames || !model.outputNames || !model.run) {
     throw new Error('Failed to load or invalid ONNX model.');
   }
-  console.log('Model loaded successfully.');
+  console.timeEnd('⏱️ 模型加载时间');
+  console.log('✅ 模型加载成功');
 
   let sourceImageElement: HTMLImageElement;
   let originalWidth: number;
   let originalHeight: number;
 
+  console.time('⏱️ 图像预处理时间');
   if (imageSource instanceof File) {
     sourceImageElement = await loadImageFromFile(imageSource);
     originalWidth = sourceImageElement.naturalWidth;
@@ -251,15 +256,11 @@ export const upscaleImageWithPatches = async (
     originalWidth = sourceImageElement.naturalWidth;
     originalHeight = sourceImageElement.naturalHeight;
   } else {
-    // ImageData
-    // 对于ImageData，我们先将其转换为HTMLImageElement，以便splitImageIntoPatches统一处理
-    // 或者直接让splitImageIntoPatches支持ImageData并获取其宽高
-    // 当前splitImageIntoPatches已支持ImageData
     originalWidth = imageSource.width;
     originalHeight = imageSource.height;
-    // splitImageIntoPatches可以直接使用ImageData，无需转换回ImageElement
-    sourceImageElement = imageSource as any; // 欺骗类型系统，因为下面split需要Element或ImageData
+    sourceImageElement = imageSource as any;
   }
+  console.timeEnd('⏱️ 图像预处理时间');
 
   const finalUpscaledWidth = originalWidth * UPSCALE_FACTOR;
   const finalUpscaledHeight = originalHeight * UPSCALE_FACTOR;
@@ -272,43 +273,57 @@ export const upscaleImageWithPatches = async (
     throw new Error('无法获取最终Canvas的2D上下文');
   }
 
-  console.log(`Splitting image into patches with overlap ${OVERLAP}px...`);
-  // splitImageIntoPatches期望HTMLImageElement或ImageData
+  console.time('⏱️ 图像分块时间');
+  console.log(`✂️ 正在将图像分割成重叠块（重叠像素：${OVERLAP}px）...`);
   const patches = splitImageIntoPatches(
     imageSource instanceof ImageData ? imageSource : sourceImageElement!,
     INPUT_PATCH_WIDTH,
     INPUT_PATCH_HEIGHT,
     OVERLAP
   );
-  console.log(`Generated ${patches.length} patches.`);
+  console.timeEnd('⏱️ 图像分块时间');
+  console.log(`📊 生成了 ${patches.length} 个图像块`);
+
+  let totalModelInferenceTime = 0;
+  let totalTensorConversionTime = 0;
+  let totalDrawingTime = 0;
 
   for (let i = 0; i < patches.length; i++) {
     const patch = patches[i];
-    console.log(`Processing patch ${i + 1}/${patches.length} at x:${patch.x}, y:${patch.y}`);
+    console.log(`\n🔄 处理图像块 ${i + 1}/${patches.length} (位置: x:${patch.x}, y:${patch.y})`);
 
-    // 1. 将图像块转换为Tensor (imageToTensor内部会处理缩放到INPUT_PATCH_WIDTH/HEIGHT)
-    const inputTensor = await imageToTensor(patch.patchData); // patchData is ImageData
+    console.time('⏱️ Tensor转换时间');
+    const inputTensor = await imageToTensor(patch.patchData);
+    console.timeEnd('⏱️ Tensor转换时间');
+    totalTensorConversionTime += performance.now();
 
-    // 2. 模型推理
+    console.time('⏱️ 模型推理时间');
     const feeds: Record<string, Tensor> = {};
     feeds[model.inputNames[0]] = inputTensor;
     const outputMap = await model.run(feeds);
     const outputTensor = outputMap[model.outputNames[0]];
+    console.timeEnd('⏱️ 模型推理时间');
+    totalModelInferenceTime += performance.now();
 
-    // 3. 将输出Tensor转换为ImageData
+    console.time('⏱️ 绘制时间');
     const upscaledPatchImageData = tensorToImageData(outputTensor);
-
-    // 4. 将放大后的图像块绘制到最终Canvas上
-    // 绘制位置是原始块坐标乘以放大因子
-    // 注意：如果OVERLAP > 0，这里的简单绘制会导致硬边。高级实现需要融合重叠区域。
     finalCtx.putImageData(
       upscaledPatchImageData,
       patch.x * UPSCALE_FACTOR,
       patch.y * UPSCALE_FACTOR
     );
-    console.log(`Patch ${i + 1} processed and drawn.`);
+    console.timeEnd('⏱️ 绘制时间');
+    totalDrawingTime += performance.now();
   }
 
-  console.log('All patches processed. Returning final upscaled image data.');
+  console.log('\n📊 性能统计:');
+  console.log(`- 总图像块数: ${patches.length}`);
+  console.log(`- 平均Tensor转换时间: ${(totalTensorConversionTime / patches.length).toFixed(2)}ms`);
+  console.log(`- 平均模型推理时间: ${(totalModelInferenceTime / patches.length).toFixed(2)}ms`);
+  console.log(`- 平均绘制时间: ${(totalDrawingTime / patches.length).toFixed(2)}ms`);
+
+  console.timeEnd('⏱️ 总处理时间');
+  console.log('🎉 图像放大处理完成！');
+
   return finalCtx.getImageData(0, 0, finalUpscaledWidth, finalUpscaledHeight);
 };

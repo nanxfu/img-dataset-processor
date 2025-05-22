@@ -1,4 +1,4 @@
-import * as ort from 'onnxruntime-web';
+import * as ort from 'onnxruntime-web/webgpu';
 
 // 会话缓存，按 key 管理不同模型实例
 const sessions: Record<string, ort.InferenceSession> = {};
@@ -14,7 +14,7 @@ export async function loadModel(key: string, modelUrl: string): Promise<ort.Infe
   }
   // 创建 InferenceSession，默认使用 wasm 后端
   const session = await ort.InferenceSession.create(modelUrl, {
-    executionProviders: ['webgl', 'wasm'],
+    executionProviders: ['webgpu'],
   });
   sessions[key] = session;
   return session;
