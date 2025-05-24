@@ -3,9 +3,8 @@ import { Button, Layout, notification, Upload } from 'antd';
 import { RcFile, UploadChangeParam } from 'antd/es/upload';
 import styled from 'styled-components';
 
-import { useImageStore } from '../../store/useImageStore';
+import { useEditorStore } from '../../store/useEditorStore';
 
-import SettingPanel from './components/SettingPanel';
 const { Sider } = Layout;
 
 const StyledSider = styled(Sider)`
@@ -13,42 +12,42 @@ const StyledSider = styled(Sider)`
   position: relative;
 
   /* 盒模型属性 */
-  background-color: #ffffff;
-  border-right: 1px solid #f0f0f0;
+  background-color: #fafafa;
+  border-right: 1px solid #e8e8e8;
 
   /* 视觉属性 */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.04);
 `;
 
 const AppTitle = styled.div`
   /* 布局属性 */
   display: flex;
   align-items: center;
+  justify-content: center;
 
   /* 盒模型属性 */
-  padding: 20px;
+  padding: 24px 20px;
   border-bottom: 1px solid #f0f0f0;
 
   /* 文本属性 */
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 28px;
-  color: #ff69b4;
+  line-height: 24px;
+  color: #262626;
 `;
 
 const UploadImageArea = styled.div`
   /* 布局属性 */
-
   height: 160px;
 
   /* 盒模型属性 */
-  margin: 25px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  margin: 24px 16px;
+  padding: 0;
 
   /* 视觉属性 */
   border-radius: 8px;
   /* 动画属性 */
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 
   & > div {
     display: flex;
@@ -59,11 +58,13 @@ const UploadImageArea = styled.div`
     width: 100%;
     height: 100%;
 
-    border: 2px dashed #d1d5db;
+    border: 2px dashed #d9d9d9;
     border-radius: 8px;
+    background-color: #fafafa;
 
     &:hover {
       border-color: #ff69b4;
+      background-color: #fff;
     }
   }
 `;
@@ -71,35 +72,98 @@ const UploadImageArea = styled.div`
 const UploadButton = styled(Button)`
   /* 布局属性 */
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 
   /* 盒模型属性 */
-  border-radius: 8px;
+  padding: 0 20px;
+  border: 1px solid #ff69b4;
+  border-radius: 6px;
+  background-color: #ff69b4;
 
   /* 文本属性 */
   font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
 
   /* 动画属性 */
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+    background-color: #ff5aa3;
+    border-color: #ff5aa3;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  .anticon {
+    font-size: 14px;
   }
 `;
 
+const InfoPanel = styled.div`
+  padding: 16px;
+  margin: 0 16px 16px 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+
+  &:hover {
+    border-color: #e8e8e8;
+  }
+
+  transition: border-color 0.2s ease;
+`;
+
+const InfoTitle = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 12px;
+`;
+
+const InfoContent = styled.div`
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.5;
+
+  > div {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+`;
+
+const StatusBadge = styled.span`
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #ff69b4;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+`;
+
+const CurrentToolText = styled.span`
+  color: #ff69b4;
+  font-weight: 500;
+`;
+
 const ToolSidebar: React.FC = () => {
-  const addImage = useImageStore(state => state.addImage);
-  const selectedImage = useImageStore(state => state.selectedImage);
-  const isCropMode = useImageStore(state => state.isCropMode);
-  const setCropMode = useImageStore(state => state.setCropMode);
+  const addImage = useEditorStore(state => state.addImage);
+  const selectedImage = useEditorStore(state => state.selectedImage);
+  const images = useEditorStore(state => state.images);
+  const currentTool = useEditorStore(state => state.currentTool);
   const [api, contextHolder] = notification.useNotification();
 
-  const openNotification = () => {
-    api.info({
-      message: '提示',
-      description: '请先选择或者导入图片',
-    });
-  };
   const handleFileUpload = (info: UploadChangeParam) => {
     if (info.file && info.file.status !== 'uploading') {
       const file = info.file.originFileObj as RcFile;
@@ -109,54 +173,21 @@ const ToolSidebar: React.FC = () => {
         name: file.name,
       };
       addImage(newImage);
+
+      // 显示成功提示
+      api.success({
+        message: '导入成功',
+        description: `已成功导入图片: ${file.name}`,
+        duration: 2,
+      });
     }
   };
-
-  const imageProcessingTools = [
-    {
-      id: 'crop',
-      label: '调整尺寸',
-      onClick: () => {
-        if (selectedImage) {
-          setCropMode(!isCropMode);
-        } else {
-          openNotification();
-        }
-      },
-      isActive: isCropMode,
-    },
-    {
-      id: 'repair',
-      label: '高清修复',
-      onClick: () => {
-        // 处理调整尺寸
-      },
-      isActive: false,
-    },
-    {
-      id: 'removeWatermark',
-      label: '去除水印',
-      onClick: () => {
-        // 处理去除水印
-      },
-      isActive: false,
-    },
-  ];
-
-  const advancedSettingsTools = [
-    {
-      id: 'other',
-      label: '其他设置',
-      onClick: () => {
-        // 处理其他设置
-      },
-    },
-  ];
 
   return (
     <StyledSider width={280}>
       {contextHolder}
       <AppTitle>图片数据集处理器</AppTitle>
+
       <UploadImageArea>
         <div className="outline">
           <Upload
@@ -176,10 +207,55 @@ const ToolSidebar: React.FC = () => {
           </Upload>
         </div>
       </UploadImageArea>
-      <SettingPanel title="图片处理" tools={imageProcessingTools} />
-      <SettingPanel title="高级设置" tools={advancedSettingsTools} />
+
+      {/* 显示当前状态信息 */}
+      <InfoPanel>
+        <InfoTitle>当前状态</InfoTitle>
+        <InfoContent>
+          <div>
+            已导入图片:<StatusBadge>{images.length}</StatusBadge>
+          </div>
+          {selectedImage && (
+            <div>
+              当前选中:{' '}
+              {selectedImage.name.length > 18
+                ? `${selectedImage.name.substring(0, 18)}...`
+                : selectedImage.name}
+            </div>
+          )}
+          {currentTool && (
+            <div>
+              当前工具: <CurrentToolText>{getToolDisplayName(currentTool)}</CurrentToolText>
+            </div>
+          )}
+        </InfoContent>
+      </InfoPanel>
+
+      {/* 操作提示 */}
+      <InfoPanel>
+        <InfoTitle>使用指南</InfoTitle>
+        <InfoContent>
+          <div>1. 点击"导入图片"添加图片文件</div>
+          <div>2. 在右侧缩略图中选择要编辑的图片</div>
+          <div>3. 从中间工具栏选择编辑工具</div>
+          <div>4. 在右侧属性面板调整设置</div>
+        </InfoContent>
+      </InfoPanel>
     </StyledSider>
   );
 };
+
+// 工具显示名称映射
+function getToolDisplayName(tool: string): string {
+  const toolNames: Record<string, string> = {
+    resize: '调整尺寸',
+    crop: '裁剪',
+    'ai-classify': 'AI分类',
+    'ai-upscale': 'AI放大',
+    'ai-repair': '高清修复',
+    'remove-watermark': '去水印',
+  };
+  return toolNames[tool] || tool;
+}
 
 export default ToolSidebar;

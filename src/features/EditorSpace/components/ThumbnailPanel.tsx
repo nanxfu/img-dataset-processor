@@ -2,7 +2,7 @@ import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { styled } from 'styled-components';
 
-import { Image, useImageStore } from '../../../store/useImageStore';
+import { useEditorStore, Image } from '../../../store/useEditorStore';
 
 const ThumbnailPanelContainer = styled.div<{ $isVisible: boolean }>`
   position: absolute;
@@ -61,132 +61,104 @@ const ThumbnailsScrollContainer = styled.div`
   }
 `;
 
-const ThumbnailsWrapper = styled.div`
+const ThumbnailContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 增加间隔，为悬停效果腾出更多空间 */
-  padding: 4px 0;
-  width: 64px; /* 与缩略图宽度一致 */
   align-items: center;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
 `;
 
-const NavButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.8);
-  color: #ff69b4;
+const ThumbnailImageWrapper = styled.div<{ $isSelected: boolean; $isModified: boolean }>`
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 3; /* 确保按钮在最上层 */
+  transition: all 0.3s ease-in-out;
+  transform-origin: center;
+  border: 2px solid ${props => (props.$isSelected ? '#ff69b4' : 'transparent')};
+  box-shadow: ${props =>
+    props.$isSelected ? '0 4px 12px rgba(255, 105, 180, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.1)'};
 
   &:hover {
-    background-color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+  }
+
+  ${props =>
+    props.$isModified &&
+    `
+    &::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #ff69b4;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+  `}
+`;
+
+const ThumbnailImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease-in-out;
+`;
+
+const ThumbnailName = styled.div<{ $isSelected: boolean }>`
+  margin-top: 4px;
+  font-size: 10px;
+  color: ${props => (props.$isSelected ? '#ff69b4' : '#666')};
+  font-weight: ${props => (props.$isSelected ? '600' : '400')};
+  text-align: center;
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.3s ease-in-out;
+`;
+
+const ScrollButton = styled.button<{ $hasMore: boolean }>`
+  display: ${props => (props.$hasMore ? 'flex' : 'none')};
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    color: #ff69b4;
     transform: scale(1.1);
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  &:active {
+    transform: scale(0.95);
   }
 `;
-
-const ThumbnailItemContainer = styled.div`
-  position: relative;
-  width: 64px;
-  height: 64px;
-`;
-
-const ThumbnailItemImage = styled.img<{ $isSelected: boolean }>`
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  border: 2px solid ${props => (props.$isSelected ? '#ff69b4' : '#ccc')};
-  object-fit: cover;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-
-  &:hover {
-    transform: scale(1.05);
-    border-color: #ff69b4;
-    z-index: 2;
-  }
-`;
-
-const ThumbnailModifiedIndicator = styled.div`
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #ff69b4;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  z-index: 3;
-`;
-
-interface ThumbnailItemProps {
-  image: Image;
-  isSelected: boolean;
-  onClick: (id: string) => void;
-}
-
-const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ image, isSelected, onClick }) => {
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    let objectUrl: string | undefined;
-    if (image.file) {
-      objectUrl = URL.createObjectURL(image.file);
-      setImageUrl(objectUrl);
-    }
-
-    return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-      // 清除状态以防万一，尽管组件卸载时理论上不需要
-      setImageUrl(undefined);
-    };
-  }, [image.file]); // 依赖 image.file
-
-  // 如果没有 URL，不渲染任何内容或显示占位符
-  if (!imageUrl) {
-    // 可以选择渲染一个加载指示器或占位符
-    return;
-  }
-
-  return (
-    <ThumbnailItemContainer key={image.id}>
-      <ThumbnailItemImage
-        src={imageUrl}
-        alt={image.name}
-        $isSelected={isSelected}
-        onClick={() => onClick(image.id)}
-        loading="lazy" // 添加懒加载
-      />
-      {image.isModified && <ThumbnailModifiedIndicator title="已修改" />}
-    </ThumbnailItemContainer>
-  );
-};
 
 interface ThumbnailPanelProps {
   isVisible: boolean;
 }
 
 const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
-  const images = useImageStore(state => state.images);
-  const selectedImage = useImageStore(state => state.selectedImage);
-  const selectImage = useImageStore(state => state.selectImage);
+  const images = useEditorStore(state => state.images);
+  const selectedImage = useEditorStore(state => state.selectedImage);
+  const selectImage = useEditorStore(state => state.selectImage);
   const [scrollPosition, setScrollPosition] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -235,32 +207,45 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({ isVisible }) => {
     }
   }, [images.length]);
 
+  const handleThumbnailClick = (image: Image) => {
+    selectImage(image.id);
+  };
+
+  if (images.length === 0) return null;
+
   return (
-    <ThumbnailPanelContainer $isVisible={isVisible && images.length > 0}>
-      {images.length > 5 && (
-        <NavButton onClick={scrollUp} disabled={!hasMoreUp}>
-          <UpOutlined />
-        </NavButton>
-      )}
+    <ThumbnailPanelContainer $isVisible={isVisible}>
+      <ScrollButton $hasMore={hasMoreUp} onClick={scrollUp} title="向上滚动">
+        <UpOutlined />
+      </ScrollButton>
 
       <ThumbnailsScrollContainer ref={scrollContainerRef} onScroll={handleScroll}>
-        <ThumbnailsWrapper>
-          {images.map(image => (
-            <ThumbnailItem
-              key={image.id}
-              image={image}
-              isSelected={selectedImage?.id === image.id}
-              onClick={selectImage}
-            />
-          ))}
-        </ThumbnailsWrapper>
+        {images.map(image => {
+          const imageUrl = URL.createObjectURL(image.file);
+          return (
+            <ThumbnailContainer key={image.id}>
+              <ThumbnailImageWrapper
+                $isSelected={selectedImage?.id === image.id}
+                $isModified={!!image.isModified}
+                onClick={() => handleThumbnailClick(image)}
+              >
+                <ThumbnailImage
+                  src={imageUrl}
+                  alt={image.name}
+                  onLoad={() => URL.revokeObjectURL(imageUrl)}
+                />
+              </ThumbnailImageWrapper>
+              <ThumbnailName $isSelected={selectedImage?.id === image.id}>
+                {image.name.length > 8 ? `${image.name.substring(0, 8)}...` : image.name}
+              </ThumbnailName>
+            </ThumbnailContainer>
+          );
+        })}
       </ThumbnailsScrollContainer>
 
-      {images.length > 5 && (
-        <NavButton onClick={scrollDown} disabled={!hasMoreDown}>
-          <DownOutlined />
-        </NavButton>
-      )}
+      <ScrollButton $hasMore={hasMoreDown} onClick={scrollDown} title="向下滚动">
+        <DownOutlined />
+      </ScrollButton>
     </ThumbnailPanelContainer>
   );
 };
