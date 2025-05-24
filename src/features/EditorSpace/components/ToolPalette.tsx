@@ -15,22 +15,12 @@ const PaletteContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 80px;
-  background: linear-gradient(180deg, #ffffff 0%, #fdf7fd 50%, #fef0fe 100%);
+  background: #fff;
   border-right: 1px solid #f0e6f0;
   padding: 20px 8px;
   gap: 12px;
   position: relative;
   box-shadow: 2px 0 15px rgba(255, 105, 180, 0.06);
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 3px;
-    height: 100%;
-    background: linear-gradient(180deg, #ff69b4, #ff8cc8, #ffb3dc);
-  }
 `;
 
 const ToolButton = styled.button<{ $isActive: boolean }>`
