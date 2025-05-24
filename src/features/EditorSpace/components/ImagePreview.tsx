@@ -9,6 +9,7 @@ import { useImageObserver } from '../../../hooks/useImageObserver';
 import { useImageStore } from '../../../store/useImageStore';
 
 import ThumbnailPanel from './ThumbnailPanel';
+import WelcomeScreen from './WelcomeScreen';
 
 const CanvasControlsPanel = styled.div`
   /* 布局属性 */
@@ -283,82 +284,86 @@ const ImagePreview: React.FC = () => {
   return (
     <CanvasControlsPanel>
       <OperationArea>
-        <OutlineArea>
-          {selectedImage && imageUrl && (
-            <React.Fragment>
-              {selectedImage.isModified && <ModifiedTag>已修改</ModifiedTag>}
-              <PreviewImage
-                ref={measuredRef}
-                src={imageUrl}
-                alt={selectedImage.name}
-                draggable={false}
-                onMouseDown={isCropMode ? handleMouseDown : undefined}
-                onMouseMove={isCropMode ? handleMouseMove : undefined}
-                onMouseUp={isCropMode ? handleMouseUpEvent : undefined}
-                onMouseLeave={isCropMode ? handleMouseUpEvent : undefined}
-                style={{
-                  transform: `scale(${scalingFactor})`,
-                  cursor: isCropMode ? 'crosshair' : 'default',
-                  filter: isCropMode ? 'brightness(0.5)' : 'none',
-                }}
-              />
-              {isCropMode && (
-                <CropRegionPreview
-                  draggable={false}
+        {images.length === 0 ? (
+          <WelcomeScreen />
+        ) : (
+          <OutlineArea>
+            {selectedImage && imageUrl && (
+              <React.Fragment>
+                {selectedImage.isModified && <ModifiedTag>已修改</ModifiedTag>}
+                <PreviewImage
+                  ref={measuredRef}
                   src={imageUrl}
                   alt={selectedImage.name}
-                  $isDrawing={isDrawing}
+                  draggable={false}
+                  onMouseDown={isCropMode ? handleMouseDown : undefined}
+                  onMouseMove={isCropMode ? handleMouseMove : undefined}
+                  onMouseUp={isCropMode ? handleMouseUpEvent : undefined}
+                  onMouseLeave={isCropMode ? handleMouseUpEvent : undefined}
                   style={{
                     transform: `scale(${scalingFactor})`,
-                    clipPath: `inset(${cropRegion.top}px ${cropRegion.right}px ${
-                      cropRegion.bottom
-                    }px ${cropRegion.left}px)`,
+                    cursor: isCropMode ? 'crosshair' : 'default',
+                    filter: isCropMode ? 'brightness(0.5)' : 'none',
                   }}
                 />
-              )}
-            </React.Fragment>
-          )}
-          <MetadataPanel>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {selectedImage && (
-                <span>
-                  {selectedImage.name} | {selectedImage.file?.type}| Natural: {naturalSize.width}x
-                  {naturalSize.height}| Display: {displaySize.width}x{displaySize.height}
-                </span>
-              )}
-              {isCropMode && (
-                <>
-                  <ActionButton onClick={handleApplyCrop}>应用裁剪</ActionButton>
-                  <ActionButton
-                    onClick={exportCroppedImage}
-                    backgroundColor="#4a90e2"
-                    hoverBackgroundColor="#357abd"
-                  >
-                    导出裁剪图片
-                  </ActionButton>
-                </>
-              )}
-            </div>
-          </MetadataPanel>
-          {selectedImage && imageUrl && (
-            <ZoomControls>
-              <ZoomButton
-                onClick={handleZoomIn}
-                disabled={scalingFactor >= maxScalingFactor}
-                title="放大"
-              >
-                +
-              </ZoomButton>
-              <ZoomButton
-                onClick={handleZoomOut}
-                disabled={scalingFactor <= minScalingFactor}
-                title="缩小"
-              >
-                -
-              </ZoomButton>
-            </ZoomControls>
-          )}
-        </OutlineArea>
+                {isCropMode && (
+                  <CropRegionPreview
+                    draggable={false}
+                    src={imageUrl}
+                    alt={selectedImage.name}
+                    $isDrawing={isDrawing}
+                    style={{
+                      transform: `scale(${scalingFactor})`,
+                      clipPath: `inset(${cropRegion.top}px ${cropRegion.right}px ${
+                        cropRegion.bottom
+                      }px ${cropRegion.left}px)`,
+                    }}
+                  />
+                )}
+              </React.Fragment>
+            )}
+            <MetadataPanel>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                {selectedImage && (
+                  <span>
+                    {selectedImage.name} | {selectedImage.file?.type}| Natural: {naturalSize.width}x
+                    {naturalSize.height}| Display: {displaySize.width}x{displaySize.height}
+                  </span>
+                )}
+                {isCropMode && (
+                  <>
+                    <ActionButton onClick={handleApplyCrop}>应用裁剪</ActionButton>
+                    <ActionButton
+                      onClick={exportCroppedImage}
+                      backgroundColor="#4a90e2"
+                      hoverBackgroundColor="#357abd"
+                    >
+                      导出裁剪图片
+                    </ActionButton>
+                  </>
+                )}
+              </div>
+            </MetadataPanel>
+            {selectedImage && imageUrl && (
+              <ZoomControls>
+                <ZoomButton
+                  onClick={handleZoomIn}
+                  disabled={scalingFactor >= maxScalingFactor}
+                  title="放大"
+                >
+                  +
+                </ZoomButton>
+                <ZoomButton
+                  onClick={handleZoomOut}
+                  disabled={scalingFactor <= minScalingFactor}
+                  title="缩小"
+                >
+                  -
+                </ZoomButton>
+              </ZoomControls>
+            )}
+          </OutlineArea>
+        )}
       </OperationArea>
       <ThumbnailPanel isVisible={true} />
     </CanvasControlsPanel>

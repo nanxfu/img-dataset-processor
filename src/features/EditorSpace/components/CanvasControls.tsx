@@ -215,12 +215,14 @@ const CanvasControls: React.FC = () => {
   const handleUpscaleImage = async () => {
     if (!selectedImage?.file) return;
     const upscaledImage = await upscaleImageWithPatches(selectedImage.file, loadModel);
-    console.log('upscaledImage', upscaledImage);
     const canvas = document.createElement('canvas');
+
     canvas.width = upscaledImage.width;
     canvas.height = upscaledImage.height;
+
     const img = await createImageBitmap(upscaledImage);
     const ctx = canvas.getContext('2d');
+
     if (!ctx) return;
     ctx.drawImage(img, 0, 0, upscaledImage.width, upscaledImage.height);
     const a = document.createElement('a');
