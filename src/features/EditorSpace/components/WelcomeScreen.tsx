@@ -1,26 +1,23 @@
+import { Upload } from 'antd';
+import { UploadChangeParam } from 'antd/es/upload';
+import { RcFile } from 'antd/es/upload';
 import React from 'react';
 
-import { useImageStore } from '../../../store/useImageStore';
+import { useEditorStore } from '../../../store/useEditorStore';
 
 const WelcomeScreen: React.FC = () => {
-  const addImage = useImageStore(state => state.addImage);
+  const addImage = useEditorStore(state => state.addImage);
 
-  const handleFileImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.multiple = true;
-    input.onchange = (e: any) => {
-      const files = Array.from(e.target.files) as File[];
-      files.forEach(file => {
-        addImage({
-          id: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
-          file,
-          name: file.name,
-        });
+  const handleFileUpload = (info: UploadChangeParam) => {
+    console.log('info', info);
+    if (info.file && info.file.status !== 'uploading') {
+      const file = info.file.originFileObj as RcFile;
+      addImage({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+        file,
+        name: file.name,
       });
-    };
-    input.click();
+    }
   };
 
   return (
@@ -90,25 +87,33 @@ const WelcomeScreen: React.FC = () => {
           <div style={{ color: '#a0a0a0', fontSize: 15, marginBottom: 18, textAlign: 'center' }}>
             拖拽图片或从设备选择文件。
           </div>
-          <button
-            style={{
-              background: '#ff4fa2',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 16,
-              border: 'none',
-              borderRadius: 8,
-              padding: '8px 24px',
-              cursor: 'pointer',
-              marginTop: 8,
-              boxShadow: '0 2px 8px #ff4fa233',
-            }}
-            onClick={handleFileImport}
-            onMouseOver={e => (e.currentTarget.style.background = '#ff6fc1')}
-            onMouseOut={e => (e.currentTarget.style.background = '#ff4fa2')}
+          <Upload
+            accept="image/*"
+            multiple
+            showUploadList={false}
+            customRequest={({ onSuccess }) => setTimeout(() => onSuccess?.(null), 0)}
+            onChange={handleFileUpload}
           >
-            立即导入
-          </button>
+            <button
+              style={{
+                background: '#ff4fa2',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 16,
+                border: 'none',
+                borderRadius: 8,
+                padding: '8px 24px',
+                cursor: 'pointer',
+                marginTop: 8,
+                boxShadow: '0 2px 8px #ff4fa233',
+              }}
+              onMouseOver={e => (e.currentTarget.style.background = '#ff6fc1')}
+              onMouseOut={e => (e.currentTarget.style.background = '#ff4fa2')}
+              type="button"
+            >
+              立即导入
+            </button>
+          </Upload>
         </div>
         {/* 处理与增强卡片 */}
         <div
