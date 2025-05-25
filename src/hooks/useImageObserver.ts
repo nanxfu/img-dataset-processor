@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 
-import { useImageStore } from '../store/useImageStore';
+import { useEditorStore } from '../store/useEditorStore';
 // 重写 useImageSize 使用 Callback Ref
 export const useImageObserver = () => {
-  const setNaturalSize = useImageStore(state => state.setNaturalSize);
-  const setDisplaySize = useImageStore(state => state.setDisplaySize);
-  const naturalSize = useImageStore(state => state.naturalSize);
-  const displaySize = useImageStore(state => state.displaySize);
+  const setNaturalSize = useEditorStore(state => state.setNaturalSize);
+  const setDisplaySize = useEditorStore(state => state.setDisplaySize);
+  const naturalSize = useEditorStore(state => state.naturalSize);
+  const displaySize = useEditorStore(state => state.displaySize);
   // State to hold the actual DOM node
   const [imgNode, setImgNode] = useState<HTMLImageElement | null>(null);
 
@@ -24,11 +24,11 @@ export const useImageObserver = () => {
       // --- Node is guaranteed to exist here ---
       const handleLoad = () => {
         if (imgNode) {
-          setNaturalSize(imgNode.naturalWidth, imgNode.naturalHeight);
-          setDisplaySize(imgNode.clientWidth, imgNode.clientHeight);
+          setNaturalSize({ width: imgNode.naturalWidth, height: imgNode.naturalHeight });
+          setDisplaySize({ width: imgNode.clientWidth, height: imgNode.clientHeight });
         } else {
-          setNaturalSize(0, 0);
-          setDisplaySize(0, 0);
+          setNaturalSize({ width: 0, height: 0 });
+          setDisplaySize({ width: 0, height: 0 });
         }
       };
 
@@ -49,8 +49,8 @@ export const useImageObserver = () => {
     } else {
       // Reset sizes if no image or node
       // console.log('LayoutEffect cleanup: Resetting sizes.');
-      setNaturalSize(0, 0);
-      setDisplaySize(0, 0);
+      setNaturalSize({ width: 0, height: 0 });
+      setDisplaySize({ width: 0, height: 0 });
     }
     // Depend on both selectedImage and the node state
   }, [imgNode, setNaturalSize, setDisplaySize]);
